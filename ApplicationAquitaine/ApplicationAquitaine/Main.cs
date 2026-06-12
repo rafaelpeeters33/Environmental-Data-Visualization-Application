@@ -8,6 +8,7 @@ namespace ApplicationAquitaine
         {
             InitializeComponent();
             RoundButton(buttonContinue, 20);
+            RoundButton(buttonQuit, 20);
         }
 
         private void RoundButton(Button button, int radius)
@@ -26,9 +27,14 @@ namespace ApplicationAquitaine
 
         private void buttonContinue_Click(object sender, EventArgs e)
         {
-            Departments departmentsForm = new Departments();
-            departmentsForm.Show();
+            Setting SettingForm = new Setting();
+            SettingForm.Show();
             this.Hide();
+        }
+
+        private void buttonQuit_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
     }
 }

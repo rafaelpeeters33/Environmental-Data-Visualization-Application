@@ -1,22 +1,30 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\",
+  "WorkspaceRootPath": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|z:\\documents\\projet fin d\u0027ann\u00E9e\\applicationaquitaine\\applicationaquitaine\\setting.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|solutionrelative:applicationaquitaine\\setting.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|z:\\documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\applicationaquitaine\\applicationaquitaine\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|solutionrelative:applicationaquitaine\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\applicationaquitaine\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\applicationaquitaine\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|solutionrelative:applicationaquitaine\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|z:\\documents\\projet fin d\u0027ann\u00E9e\\applicationaquitaine\\applicationaquitaine\\setting.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|z:\\documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\applicationaquitaine\\applicationaquitaine\\setting.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|solutionrelative:applicationaquitaine\\setting.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|z:\\documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\applicationaquitaine\\applicationaquitaine\\compare.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|solutionrelative:applicationaquitaine\\compare.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|z:\\documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\applicationaquitaine\\applicationaquitaine\\setting.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|solutionrelative:applicationaquitaine\\setting.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|z:\\documents\\projet fin d\u0027ann\u00E9e\\applicationaquitaine\\applicationaquitaine\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|solutionrelative:applicationaquitaine\\main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|z:\\documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\applicationaquitaine\\applicationaquitaine\\compare.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2B9E8F7D-787A-40A4-A9FE-E9529A6BDFDD}|ApplicationAquitaine\\ApplicationAquitaine.csproj|solutionrelative:applicationaquitaine\\compare.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,28 +34,66 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
+              "Title": "Main.cs",
+              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Main.cs",
+              "RelativeDocumentMoniker": "ApplicationAquitaine\\Main.cs",
+              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Main.cs",
+              "RelativeToolTip": "ApplicationAquitaine\\Main.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAkwAoAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-09T12:31:50.697Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Compare.cs",
+              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Compare.cs",
+              "RelativeDocumentMoniker": "ApplicationAquitaine\\Compare.cs",
+              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Compare.cs",
+              "RelativeToolTip": "ApplicationAquitaine\\Compare.cs",
+              "ViewState": "AgIAABQAAAAAAAAAAAAkwC0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-10T13:43:14.435Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Compare.cs [Conception]",
+              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Compare.cs",
+              "RelativeDocumentMoniker": "ApplicationAquitaine\\Compare.cs",
+              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Compare.cs [Conception]",
+              "RelativeToolTip": "ApplicationAquitaine\\Compare.cs [Conception]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-10T13:39:04.799Z",
+              "EditorCaption": " [Conception]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "Setting.cs",
-              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\ApplicationAquitaine\\Setting.cs",
+              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Setting.cs",
               "RelativeDocumentMoniker": "ApplicationAquitaine\\Setting.cs",
-              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\ApplicationAquitaine\\Setting.cs",
+              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Setting.cs",
               "RelativeToolTip": "ApplicationAquitaine\\Setting.cs",
-              "ViewState": "AgIAAAEAAAAAAAAAAAAqwBcAAAAFAAAAAAAAAA==",
+              "ViewState": "AgIAACEAAAAAAAAAAAAswDIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-10T12:22:01.054Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "Setting.cs [Conception]",
-              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\ApplicationAquitaine\\Setting.cs",
+              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Setting.cs",
               "RelativeDocumentMoniker": "ApplicationAquitaine\\Setting.cs",
-              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\ApplicationAquitaine\\Setting.cs [Conception]",
+              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Setting.cs [Conception]",
               "RelativeToolTip": "ApplicationAquitaine\\Setting.cs [Conception]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-10T12:18:37.451Z",
@@ -55,24 +101,11 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Main.cs",
-              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\ApplicationAquitaine\\Main.cs",
-              "RelativeDocumentMoniker": "ApplicationAquitaine\\Main.cs",
-              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\ApplicationAquitaine\\Main.cs",
-              "RelativeToolTip": "ApplicationAquitaine\\Main.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-09T12:31:50.697Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 1,
               "Title": "Main.cs [Conception]",
-              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\ApplicationAquitaine\\Main.cs",
+              "DocumentMoniker": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Main.cs",
               "RelativeDocumentMoniker": "ApplicationAquitaine\\Main.cs",
-              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\ApplicationAquitaine\\ApplicationAquitaine\\Main.cs [Conception]",
+              "ToolTip": "Z:\\Documents\\projet fin d\u0027ann\u00E9e\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\Main.cs [Conception]",
               "RelativeToolTip": "ApplicationAquitaine\\Main.cs [Conception]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-09T12:30:29.744Z",

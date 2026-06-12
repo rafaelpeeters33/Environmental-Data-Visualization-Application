@@ -10,24 +10,17 @@ using System.Windows.Forms;
 
 namespace ApplicationAquitaine
 {
-    public partial class Setting : Form
+    public partial class Compare : Form
     {
-        public Setting()
+        public Compare()
         {
             InitializeComponent();
         }
 
-        private void buttonCompare_Click(object sender, EventArgs e)
-        {
-            Compare compareForm = new Compare();
-            compareForm.Show();
-            this.Hide();
-        }
-
         private void buttonRollBack_Click(object sender, EventArgs e)
         {
-            Main MainForm = new Main();
-            MainForm.Show();
+            Setting SettingForm = new Setting();
+            SettingForm.Show();
             this.Hide();
         }
 
@@ -41,12 +34,17 @@ namespace ApplicationAquitaine
 
         }
 
-        private void buttonValidate_Click(object sender, EventArgs e)
+        private void buttonRegion_Click(object sender, EventArgs e)
         {
 
         }
 
         private void buttonDownload_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void buttonValidate_Click(object sender, EventArgs e)
         {
 
         }
