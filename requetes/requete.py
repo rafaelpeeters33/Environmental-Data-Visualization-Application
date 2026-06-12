@@ -72,6 +72,7 @@ def generer_graphe_barres(date_debut, date_fin, categorie_risque, echelle, agreg
     return nom_fichier
 
 generer_graphe_barres('20200101','20200201','incendie','Gironde', 'sum')
+generer_graphe_barres('20200101','20200201','incendie','Gironde', 'sum')
 plt.show()
 
 
