@@ -6,75 +6,283 @@ import geopandas as gpd
 import pymssql 
 from IPython.display import display
 
-psw      = "ETD"
-server   = "info-mssql-etd"
-user     = "ETD"
+psw       = "ETD"
+server    = "info-mssql-etd"
+user      = "ETD"
 database = "MLR12345"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
 
-def generer_graphe_barres(date_debut, date_fin, categorie_risque, echelle, agregation):
-    if echelle == 'region':
-        colonne_cible = 'Nouvelle-Aquitaine' 
-        jointure_sup = ""
-    elif echelle == 'departement':
-        colonne_cible = "dpt.DPT_NOM"
-        jointure_sup = "JOIN T_DEPARTEMENT_DPT dpt ON c.DPT_ID = dpt.DPT_ID"
-    else:
-        colonne_cible = "c.CMN_NOM"
-        jointure_sup = ""
+def generer_graphe_barres(date_debut, date_fin, categorie_risque, echelle, agregation, nom_zone=None):
     
-    requete_sql = f"""
-        SELECT {colonne_cible} AS NOM_ZONE, d.DNN_VALEUR
-        FROM T_DONNEES_DNN d
-        JOIN situé s ON d.DNN_ID = s.DNN_ID
-        JOIN T_COMMUNE_CMN c ON s.CMN_ID = c.CMN_ID
-        {jointure_sup}
-        JOIN déroulé der ON d.DNN_ID = der.DNN_ID
-        JOIN T_DATEJOURE_DTJ dtj ON der.ID_DTJ = dtj.ID_DTJ
-        JOIN possède p ON d.DNN_ID = p.DNN_ID
-        JOIN T_CATEGORIE_CTG cat ON p.CTG_ID = cat.CTG_ID
-        WHERE cat.CTG_NOM = '{categorie_risque}'
-        AND dtj.DTJ_DATE_DEBUT >= '{date_debut}'
-        AND dtj.DTJ_DATE_FIN <= '{date_fin}'
-    """
+    # ECHELLE 
+    if echelle == 'region':
+        colonne_cible = "'Nouvelle-Aquitaine'" 
+        filtre_geo = ""
+        titre_zone = "Nouvelle-Aquitaine"
+    elif echelle == 'departement':
+        colonne_cible = "DPT_NOM"
+        filtre_geo = f"AND T_DEPARTEMENT_DPT.DPT_NOM = '{nom_zone}'"
+        titre_zone = nom_zone
+    else: 
+        colonne_cible = "CMN_NOM"
+        filtre_geo = f"AND T_COMMUNE_CMN.CMN_NOM = '{nom_zone}'"
+        titre_zone = nom_zone
 
+    # COULEUR
+    if categorie_risque == 'incendie':
+        couleur_barre = "#F10C0C"
+    elif categorie_risque == 'inondation':
+        couleur_barre = '#1E88E5' 
+    else:
+        couleur_barre = "#DF319F" 
+
+    # REQUETE 
+    requete_sql = f"""
+        SELECT {colonne_cible} AS NOM_ZONE, DNN_VALEUR 
+        
+        FROM T_DONNEES_DNN 
+        JOIN situé ON T_DONNEES_DNN.DNN_ID = situé.DNN_ID
+        JOIN T_COMMUNE_CMN ON situé.CMN_ID = T_COMMUNE_CMN.CMN_ID
+        JOIN T_DEPARTEMENT_DPT ON T_COMMUNE_CMN.DPT_ID = T_DEPARTEMENT_DPT.DPT_ID 
+        JOIN déroulé ON T_DONNEES_DNN.DNN_ID = déroulé.DNN_ID
+        JOIN T_DATEJOURE_DTJ ON déroulé.ID_DTJ = T_DATEJOURE_DTJ.ID_DTJ
+        JOIN possède ON T_DONNEES_DNN.DNN_ID = possède.DNN_ID
+        JOIN T_CATEGORIE_CTG ON possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+       
+        WHERE T_CATEGORIE_CTG.CTG_NOM = '{categorie_risque}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT >= '{date_debut}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}'
+        {filtre_geo}
+    """
     df_graphes = pd.read_sql(requete_sql, cnxn, coerce_float=False)
 
+    if df_graphes.empty:
+        print(f"Aucune donnée trouvée pour {titre_zone}.")
+        return None
+
+    # AGREGATIONS
     if agregation == 'avg':
         df_final = df_graphes.groupby('NOM_ZONE').mean().reset_index()
-        titre = 'moyenne'
+        graphTitle = f'Moyenne des {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
     elif agregation == 'max':
         df_final = df_graphes.groupby('NOM_ZONE').max().reset_index()
-        titre = 'maximum'
+        graphTitle = f'Plus grand {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
     elif agregation == 'min':
         df_final = df_graphes.groupby('NOM_ZONE').min().reset_index()
-        titre = 'minimum'
+        graphTitle = f'Plus petit {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
     elif agregation == 'sum':
         df_final = df_graphes.groupby('NOM_ZONE').sum().reset_index()
-        titre = 'somme'
+        graphTitle = f'Somme des {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
     elif agregation == 'count':
         df_final = df_graphes.groupby('NOM_ZONE').count().reset_index()
-        titre = 'nombre'
+        graphTitle = f'Nombre de {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
     
+    # PLOT
     ax = df_final.plot(
         kind='bar', 
         x='NOM_ZONE', 
         y='DNN_VALEUR', 
-        title=f'{titre} des {categorie_risque} en {echelle} ({date_debut} - {date_fin})',
-        legend=False
+        title=graphTitle,
+        legend=False,
+        color=couleur_barre 
     )
     
-    nom_fichier = f'{categorie_risque}_{echelle}.png'
+    plt.xticks(rotation=0)
+    
+    nom_zone_propre = titre_zone.replace(" ", "_")
+    nom_fichier = f'{categorie_risque}_{nom_zone_propre}_{agregation}.png'
+    
     plt.savefig(nom_fichier, bbox_inches='tight')
     plt.show()
 
     return nom_fichier
 
-generer_graphe_barres('20200101','20200201','incendie','Gironde', 'sum')
-generer_graphe_barres('20200101','20200201','incendie','Gironde', 'sum')
+#generer_graphe_barres('20200101','20200201','incendie','commune', 'avg', 'Pessac')
+#plt.show()
+
+
+
+def generer_graphe_ligne(date_debut, date_fin, categorie_risque, echelle, agregation, nom_zone=None):
+    
+    # ECHELLE 
+    if echelle == 'region':
+        colonne_cible = "'Nouvelle-Aquitaine'" 
+        filtre_geo = ""
+        titre_zone = "Nouvelle-Aquitaine"
+    elif echelle == 'departement':
+        colonne_cible = "DPT_NOM"
+        filtre_geo = f"AND T_DEPARTEMENT_DPT.DPT_NOM = '{nom_zone}'"
+        titre_zone = nom_zone
+    else: 
+        colonne_cible = "CMN_NOM"
+        filtre_geo = f"AND T_COMMUNE_CMN.CMN_NOM = '{nom_zone}'"
+        titre_zone = nom_zone
+
+    # COULEUR
+    if categorie_risque == 'incendie':
+        couleur_barre = "#F10C0C"
+    elif categorie_risque == 'inondation':
+        couleur_barre = '#1E88E5' 
+    else:
+        couleur_barre = "#DF319F" 
+
+    # REQUETE 
+    requete_sql = f"""
+        SELECT {colonne_cible} AS NOM_ZONE, DNN_VALEUR,DTJ_DATE_DEBUT,DTJ_DATE_FIN
+        
+        FROM T_DONNEES_DNN 
+        JOIN situé ON T_DONNEES_DNN.DNN_ID = situé.DNN_ID
+        JOIN T_COMMUNE_CMN ON situé.CMN_ID = T_COMMUNE_CMN.CMN_ID
+        JOIN T_DEPARTEMENT_DPT ON T_COMMUNE_CMN.DPT_ID = T_DEPARTEMENT_DPT.DPT_ID 
+        JOIN déroulé ON T_DONNEES_DNN.DNN_ID = déroulé.DNN_ID
+        JOIN T_DATEJOURE_DTJ ON déroulé.ID_DTJ = T_DATEJOURE_DTJ.ID_DTJ
+        JOIN possède ON T_DONNEES_DNN.DNN_ID = possède.DNN_ID
+        JOIN T_CATEGORIE_CTG ON possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+       
+        WHERE T_CATEGORIE_CTG.CTG_NOM = '{categorie_risque}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT >= '{date_debut}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}'
+        {filtre_geo}
+    """
+    df_graphes = pd.read_sql(requete_sql, cnxn, coerce_float=False)
+    df_graphes['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphes['DTJ_DATE_DEBUT'])
+    df_graphes['DTJ_DATE_FIN'] = pd.to_datetime(df_graphes['DTJ_DATE_FIN'])
+
+    #On soustrait les dates
+    dateDebut = pd.to_datetime(date_debut, format='%Y%m%d')
+    dateFin = pd.to_datetime(date_fin, format='%Y%m%d')
+    periode= (dateFin-dateDebut).days
+    
+    if df_graphes.empty:
+        print(f"Aucune donnée trouvée pour {titre_zone}.")
+        return None
+ #On verifie si superieur a un an
+    if periode>365:
+       df_graphes['PERIODE']=df_graphes['DTJ_DATE_DEBUT'].dt.year
+    elif periode<=365:
+       df_graphes['PERIODE']=df_graphes['DTJ_DATE_DEBUT'].dt.month
+       
+    graphTitle = f'Moyenne des {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
+    # AGREGATIONS
+    if agregation == 'avg':
+        df_final = df_graphes.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
+    elif agregation == 'sum':
+        df_final = df_graphes.groupby('PERIODE')['DNN_VALEUR'].sum().reset_index()
+        graphTitle = f'Somme des {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
+    elif agregation == 'count':
+        df_final = df_graphes.groupby('PERIODE')['DNN_VALEUR'].count().reset_index()
+        graphTitle = f'Nombre de {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
+     
+    # PLOT
+    ax = df_final.plot(
+        kind='line', 
+        x='PERIODE', 
+        y='DNN_VALEUR', 
+        title=graphTitle,
+        legend=False,
+        color=couleur_barre 
+    )
+    nom_zone_propre = titre_zone.replace(" ", "_")
+    nom_fichier = f'{categorie_risque}_{nom_zone_propre}_{agregation}.png'
+    
+    plt.savefig(nom_fichier, bbox_inches='tight')
+    plt.show()
+
+    return nom_fichier
+
+generer_graphe_ligne('19900101','20200201','incendie','commune', 'avg', 'Pessac')
 plt.show()
 
 
 
+def generer_graphe_ligne(date_debut, date_fin, categorie_risque, echelle, agregation, nom_zone=None):
+    
+    # ECHELLE 
+    if echelle == 'region':
+        colonne_cible = "'Nouvelle-Aquitaine'" 
+        filtre_geo = ""
+        titre_zone = "Nouvelle-Aquitaine"
+    elif echelle == 'departement':
+        colonne_cible = "DPT_NOM"
+        filtre_geo = f"AND T_DEPARTEMENT_DPT.DPT_NOM = '{nom_zone}'"
+        titre_zone = nom_zone
+    else: 
+        colonne_cible = "CMN_NOM"
+        filtre_geo = f"AND T_COMMUNE_CMN.CMN_NOM = '{nom_zone}'"
+        titre_zone = nom_zone
 
+    # COULEUR
+    if categorie_risque == 'incendie':
+        couleur_barre = "#F10C0C"
+    elif categorie_risque == 'inondation':
+        couleur_barre = '#1E88E5' 
+    else:
+        couleur_barre = "#DF319F" 
+
+    # REQUETE 
+    requete_sql = f"""
+        SELECT {colonne_cible} AS NOM_ZONE, DNN_VALEUR,DTJ_DATE_DEBUT,DTJ_DATE_FIN
+        
+        FROM T_DONNEES_DNN 
+        JOIN situé ON T_DONNEES_DNN.DNN_ID = situé.DNN_ID
+        JOIN T_COMMUNE_CMN ON situé.CMN_ID = T_COMMUNE_CMN.CMN_ID
+        JOIN T_DEPARTEMENT_DPT ON T_COMMUNE_CMN.DPT_ID = T_DEPARTEMENT_DPT.DPT_ID 
+        JOIN déroulé ON T_DONNEES_DNN.DNN_ID = déroulé.DNN_ID
+        JOIN T_DATEJOURE_DTJ ON déroulé.ID_DTJ = T_DATEJOURE_DTJ.ID_DTJ
+        JOIN possède ON T_DONNEES_DNN.DNN_ID = possède.DNN_ID
+        JOIN T_CATEGORIE_CTG ON possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+       
+        WHERE T_CATEGORIE_CTG.CTG_NOM = '{categorie_risque}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT >= '{date_debut}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}'
+        {filtre_geo}
+    """
+    df_graphes = pd.read_sql(requete_sql, cnxn, coerce_float=False)
+    df_graphes['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphes['DTJ_DATE_DEBUT'])
+    df_graphes['DTJ_DATE_FIN'] = pd.to_datetime(df_graphes['DTJ_DATE_FIN'])
+
+    #On soustrait les dates
+    dateDebut = pd.to_datetime(date_debut, format='%Y%m%d')
+    dateFin = pd.to_datetime(date_fin, format='%Y%m%d')
+    periode= (dateFin-dateDebut).days
+    
+    if df_graphes.empty:
+        print(f"Aucune donnée trouvée pour {titre_zone}.")
+        return None
+ #On verifie si superieur a un an
+    if periode>365:
+       df_graphes['PERIODE']=df_graphes['DTJ_DATE_DEBUT'].dt.year
+    elif periode<=365:
+       df_graphes['PERIODE']=df_graphes['DTJ_DATE_DEBUT'].dt.month
+       
+    graphTitle = f'Moyenne des {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
+    # AGREGATIONS
+    if agregation == 'avg':
+        df_final = df_graphes.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
+    elif agregation == 'sum':
+        df_final = df_graphes.groupby('PERIODE')['DNN_VALEUR'].sum().reset_index()
+        graphTitle = f'Somme des {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
+    elif agregation == 'count':
+        df_final = df_graphes.groupby('PERIODE')['DNN_VALEUR'].count().reset_index()
+        graphTitle = f'Nombre de {categorie_risque} en {titre_zone} ({date_debut} - {date_fin})'
+     
+    # PLOT
+    ax = df_final.plot(
+        kind='line', 
+        x='PERIODE', 
+        y='DNN_VALEUR', 
+        title=graphTitle,
+        legend=False,
+        color=couleur_barre 
+    )
+    nom_zone_propre = titre_zone.replace(" ", "_")
+    nom_fichier = f'{categorie_risque}_{nom_zone_propre}_{agregation}.png'
+    
+    plt.savefig(nom_fichier, bbox_inches='tight')
+    plt.show()
+
+    return nom_fichier
+
+generer_graphe_ligne('19900101','20200201','incendie','commune', 'avg', 'Pessac')
+plt.show()
