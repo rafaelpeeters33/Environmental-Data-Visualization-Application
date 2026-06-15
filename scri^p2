@@ -4,7 +4,7 @@ import os
 
 cnxn = pymssql.connect ( server = 'info-mssql-etd', user = 'ETD',password = 'ETD', database = 'BD_E15_VISU' )
 cursor = cnxn.cursor(as_dict=True)
-
+dataList={}
 indice_Nouvelle_Aquitaine_df = pd.read_csv("dossier_csv/ind_nouvelle_aquitaine.csv", sep=",",low_memory=False,usecols=["date_ech","code_qual","type_zone","code_zone",
                                                                                                     "code_no2","code_so2","code_o3","code_pm10","code_pm25"])
 # incendie_insert = "INSERT INTO T_CATEGORIE_CTG (CTG_NOM) VALUES('INCENDIE')"
@@ -66,38 +66,65 @@ fichierIncendie = fichier.merge(france_df, how='inner', right_on='code_insee', l
 
 
 
+data=""
+j=0
 
-
-for index, row in fichierIncendie.iterrows() :    
+for index, row in fichierIncendie.iterrows() :  
+    dataList[j]=[]  
     if row["Code INSEE"] in liste_cmn :
-        request1="INSERT INTO T_DONNEES_DNN (DNN_NOM,DNN_UNITE,DNN_VALEUR) VALUES ('SURFACE', 'm2', %s)" % (row["Surface parcourue (m2)"])
-        #cursor.execute(request1)
+        surface = row["Surface parcourue (m2)"]
+        if surface not in dataList.values() :
+            request1="INSERT INTO T_DONNEES_DNN (DNN_NOM,DNN_UNITE,DNN_VALEUR) VALUES ('SURFACE', 'm2', %s)" % (surface)
+            cursor.execute(request1)
+        dataList[j].append(surface)
+        j+=1
         date = row["Date de première alerte"][:-9].replace("-", "")
         cnxn.commit()
         if date not in listeDate :
             request4="INSERT INTO T_DATEJOURE_DTJ(DTJ_DATE_DEBUT) VALUES ('%s')" % (date)
             listeDate.append(date)
-            #cursor.execute(request4)
+            cursor.execute(request4)
 
-donne_id="(select TOP 1 DNN_ID from T_DONNEES_DNN)"
-cursor.execute(donne_id)
-dataIndexCursor=cursor.fetchone()
-dataIndex=dataIndexCursor['DNN_ID']
-        
+# donne_id="(select TOP 1 DNN_ID from T_DONNEES_DNN)"
+# cursor.execute(donne_id)
+# dataIndexCursor=cursor.fetchone()
+# dataIndex=dataIndexCursor['DNN_ID']
+i=0
+incendie =[]
+situé=[]
+
 for index, row in fichierIncendie.iterrows() :    
     if row["Code INSEE"] in liste_cmn :    
         date = row["Date de première alerte"][:-9].replace("-", "")   
-        request2="INSERT INTO SITUÉ (DNN_ID,CMN_ID) VALUES (%s,'%s')" % (dataIndex,row["Code INSEE"])
-        #cursor.execute(request2)
+        dataIndex = ("(Select DNN_ID From T_DONNEES_DNN Where DNN_NOM='SURFACE' and DNN_VALEUR=%s)") % (dataList[i][0])
+        print(dataIndex)
+        cursor.execute(dataIndex)
+        dataIndexCursor=cursor.fetchone()
+        print(dataIndexCursor)
+        if (dataIndexCursor['DNN_ID'],row["Code INSEE"]) not in situé:
+            request2="INSERT INTO SITUÉ (DNN_ID,CMN_ID) VALUES (%d,'%s')" % (dataIndexCursor['DNN_ID'],row["Code INSEE"])
+            cursor.execute(request2)
+            situé.append((dataIndexCursor['DNN_ID'],row["Code INSEE"]))
         DateIndex=("(select ID_DTJ from T_DATEJOURE_DTJ where DTJ_DATE_DEBUT='%s')")%(row["Date de première alerte"][:-9]+" 00:00:00.000")
         DateIndex=("(select ID_DTJ from T_DATEJOURE_DTJ where DTJ_DATE_DEBUT='%s')")%(date)
-        request3="INSERT INTO DÉROULÉ (DNN_ID,ID_DTJ) VALUES (%s,%s)" % (dataIndex,DateIndex)
-        #cursor.execute(request3)
-        incendi_id="(select CTG_ID from T_CATEGORIE_CTG where CTG_NOM='INCENDIE')"
-        request5="INSERT INTO POSSÈDE(CTG_ID,DNN_ID) VALUES (%s,%s)" % (incendi_id,dataIndex)
-        #cursor.execute(request5)
-        dataIndex+=1
+        if (dataIndexCursor['DNN_ID'],DateIndex) in incendie : 
+            request3="INSERT INTO DÉROULÉ (DNN_ID,ID_DTJ) VALUES (%s,%s)" % (dataIndexCursor['DNN_ID'],DateIndex)
+            cursor.execute(request3)
+            incendie.append((dataIndexCursor['DNN_ID'],DateIndex))
+        i+=1
         cnxn.commit()
+
+dataIndex = ("(Select DNN_ID From T_DONNEES_DNN)")
+cursor.execute(dataIndex)
+a=cursor.fetchall()
+for i in a :
+    incendi_id="(select CTG_ID from T_CATEGORIE_CTG where CTG_NOM='INCENDIE')"
+
+    request5="INSERT INTO POSSÈDE(CTG_ID,DNN_ID) VALUES (%s,%d)" % (incendi_id,i['DNN_ID'])
+    cursor.execute(request5)
+    cnxn.commit()
+
+
 
 
 # # listecol2 = ["NOM_USUEL",
@@ -149,11 +176,10 @@ listeDateDeb={}
 listeDateFin={}
 i=0
 inondation_risque = pd.read_csv("dossier_csv/gaspar/azi_gaspar.csv", sep=';', usecols=liste_col_inondation_risque)
-
+request1="INSERT INTO T_DONNEES_DNN (DNN_nom,DNN_unite,DNN_valeur) VALUES ('RISQUE', 'RISQUE', 'RISQUE_INONDATION')"
+cursor.execute(request1)
 for index, row in inondation_risque.iterrows() :
     if row["cod_commune"] in liste_cmn :
-        request1="INSERT INTO T_DONNEES_DNN (DNN_nom,DNN_unite,DNN_valeur) VALUES ('RISQUE', 'RISQUE', 'RISQUE_INONDATION')"
-        #cursor.execute(request1)
         dateDeb = str(row["dat_program_deb"])[:-9].replace("-", "")
         listeDateDeb[i]=dateDeb
         dateFin = str(row["dat_program_fin"])[:-9].replace("-", "")
@@ -161,7 +187,7 @@ for index, row in inondation_risque.iterrows() :
         if dateDeb not in listeDate :
             request4="INSERT INTO T_DATEJOURE_DTJ(DTJ_DATE_DEBUT, DTJ_DATE_FIN) VALUES ('%s', '%s')" % (dateDeb, dateFin)
             listeDate.append(dateDeb)
-            #cursor.execute(request4)
+            cursor.execute(request4)
         i+=1
         cnxn.commit()
 
@@ -171,54 +197,56 @@ for index, row in inondation_risque.iterrows() :
         dateDeb = listeDateDeb[i]
         dateFin = listeDateFin[i]
         DateIndex=("(select ID_DTJ from T_DATEJOURE_DTJ where DTJ_DATE_DEBUT='%s' and DTJ_DATE_FIN='%s')")%(dateDeb,dateFin)
-        request2="INSERT INTO SITUÉ (DNN_ID,CMN_ID) VALUES (%s,'%s')" % (dataIndex,row["cod_commune"])
-        #cursor.execute(request2)
-        request3="INSERT INTO DÉROULÉ (DNN_ID,ID_DTJ) VALUES (%s,%s)" % (dataIndex,DateIndex)
-        #cursor.execute(request3)
+        DataIndex=("(select DNN_ID from T_DONNEES_DNN where DNN_VALEUR='RISQUE_INONDATION')")
+        request2="INSERT INTO SITUÉ (DNN_ID,CMN_ID) VALUES (%s,'%s')" % (DataIndex,row["cod_commune"])
+        cursor.execute(request2)
+        request3="INSERT INTO DÉROULÉ (DNN_ID,ID_DTJ) VALUES (%s,%s)" % (DataIndex,DateIndex)
+        cursor.execute(request3)
         inon_ris_id="(select CTG_ID from T_CATEGORIE_CTG where CTG_NOM='RISQUE_INONDATION')"
-        request5="INSERT INTO POSSÈDE(CTG_ID,DNN_ID) VALUES (%s,%s)" % (inon_ris_id,dataIndex)
-        #cursor.execute(request5)
-        dataIndex+=1
+        request5="INSERT INTO POSSÈDE(CTG_ID,DNN_ID) VALUES (%s,%s)" % (inon_ris_id,DataIndex)
+        cursor.execute(request5)
         i+=1
         cnxn.commit()
 
 
 
 
-for index, row in indice_Nouvelle_Aquitaine_df.iterrows():
-    print()
-    if str(row["code_zone"]) in liste_cmn :
-        dnn_to_cmn = row["code_zone"]
-        date_ind = row["date_ech"][:-10].replace("-", "")
+# for index, row in indice_Nouvelle_Aquitaine_df.iterrows():
+#     print()
+#     if str(row["code_zone"]) in liste_cmn :
+#         dnn_to_cmn = row["code_zone"]
+#         date_ind = row["date_ech"][:-10].replace("-", "")
 
-        print(date_ind)
-        if(row["type_zone"] == "commune"):
-            for pol in dic_pol.keys() :
-                print(pol)
-                request1="INSERT INTO T_DONNEES_DNN (DNN_nom,DNN_unite,DNN_valeur) VALUES('%s', '%s', '%s')" % (dic_pol[pol][1].replace("'"," "), dic_pol[pol][2],row[dic_pol[pol][0]])
-                cursor.execute(request1)
-                if date_ind not in listeDate :
-                    request4="INSERT INTO T_DATEJOURE_DTJ(DTJ_DATE_DEBUT) VALUES('%s')" % (date_ind)
+#         print(date_ind)
+#         if(row["type_zone"] == "commune"):
+#             for pol in dic_pol.keys() :
+#                 print(pol)
+#                 if "'%s', '%s', '%s'" % (dic_pol[pol][1].replace("'"," "), dic_pol[pol][2],row[dic_pol[pol][0]]) not in dataList :
+#                     request1="INSERT INTO T_DONNEES_DNN (DNN_nom,DNN_unite,DNN_valeur) VALUES('%s', '%s', '%s')" % (dic_pol[pol][1].replace("'"," "), dic_pol[pol][2],row[dic_pol[pol][0]])
+#                     cursor.execute(request1)
+#                 dataList[j]=("'%s', '%s', '%s'" % (dic_pol[pol][1].replace("'"," "), dic_pol[pol][2],row[dic_pol[pol][0]]))
+#                 j+=1
+#             if date_ind not in listeDate :
+#                 request4="INSERT INTO T_DATEJOURE_DTJ(DTJ_DATE_DEBUT) VALUES('%s')" % (date_ind)
+#                 listeDate.append(date_ind)
+#                 cursor.execute(request4)
+#             cnxn.commit()
 
-                    listeDate.append(date_ind)
-                    cursor.execute(request4)
-                dataIndex+=1
-                cnxn.commit()
-
-
-for index, row in indice_Nouvelle_Aquitaine_df.iterrows():
-    if str(row["code_zone"]) in liste_cmn :
-        dnn_to_cmn = row["code_zone"]
-        date_ind = row["date_ech"]
-        if(row["type_zone"] == "commune"):
-            for pol in dic_pol.keys() :
-                request2="INSERT INTO SITUÉ (DNN_ID,CMN_ID) VALUES(%s,'%s')" % (dataIndex, dnn_to_cmn)
-                cursor.execute(request2)
-                request3="INSERT INTO DÉROULÉ (DNN_ID,ID_DTJ) VALUES (%s,'%s')" % (dataIndex, date_ind)
-                cursor.execute(request3)
-                MESURE_id="(select CTG_ID from T_CATEGORIE_CTG where CTG_NOM='%s')"%(pol)
-                request5="INSERT INTO POSSÈDE(CTG_ID,DNN_ID) VALUES (%s,%s)" % (MESURE_id,dataIndex)
-                cnxn.commit()
+# k=j
+# for index, row in indice_Nouvelle_Aquitaine_df.iterrows():
+#     if str(row["code_zone"]) in liste_cmn :
+#         dnn_to_cmn = row["code_zone"]
+#         date_ind = row["date_ech"]
+#         if(row["type_zone"] == "commune"):
+#             for pol in dic_pol.keys() :
+#                 dataIndex = "(Select DNN_ID from T_DONNEES_DNN where )"
+#                 request2="INSERT INTO SITUÉ (DNN_ID,CMN_ID) VALUES(%s,'%s')" % (dataIndex, dnn_to_cmn)
+#                 cursor.execute(request2)
+#                 request3="INSERT INTO DÉROULÉ (DNN_ID,ID_DTJ) VALUES (%s,'%s')" % (dataIndex, date_ind)
+#                 cursor.execute(request3)
+#                 MESURE_id="(select CTG_ID from T_CATEGORIE_CTG where CTG_NOM='%s')"%(pol)
+#                 request5="INSERT INTO POSSÈDE(CTG_ID,DNN_ID) VALUES (%s,%s)" % (MESURE_id,dataIndex)
+#                 cnxn.commit()
 cnxn.close()
 
 
