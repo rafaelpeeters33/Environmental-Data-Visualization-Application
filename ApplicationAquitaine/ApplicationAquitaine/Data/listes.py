@@ -1,3 +1,4 @@
+
 import sys
 import pandas as pd
 import sqlalchemy as sa
@@ -5,15 +6,23 @@ import sqlalchemy as sa
 psw      = "ETD"
 server   = "info-mssql-etd"
 user     = "ETD"
-database = "MLR12345"
+database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
+
+fonction = str(sys.argv[1])
 
 def get_departements():
     requete = "SELECT DPT_NOM FROM T_DEPARTEMENT_DPT"
     df = pd.read_sql(requete, cnxn)
-    for val in df['DPT_NOM']: 
-        print(val.strip())
+
+
+
+    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'All_Dep.txt')
+    
+    with open(chemin_fichier, 'w', encoding='utf-8') as f:
+        for val in df['DPT_NOM']:
+            f.write(val.strip() + '\n')
 
 def get_communes(nom_dpt):
     requete = f"""
@@ -26,13 +35,17 @@ def get_communes(nom_dpt):
     for val in df['CMN_NOM']: 
         print(val.strip())
 
+if fonction == "get_departements" : 
+    get_departements()
 
-if __name__ == '__main__':
-    commande_recue = input().strip()
-    if commande_recue == "departements":
-        get_departements()
-    elif commande_recue.startswith("communes|"):
-        nom_departement_choisi = commande_recue.split('|')[1]
-        get_communes(nom_departement_choisi)
- 
-        #creer csv ce serait cool
+elif fonction == "get_communes" :
+    dep = str(sys.argv[2])
+    get_communes(dep)
+
+
+
+
+
+
+
+

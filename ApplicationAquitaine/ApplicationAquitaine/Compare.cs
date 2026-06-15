@@ -21,7 +21,7 @@ namespace ApplicationAquitaine
         {
             Setting SettingForm = new Setting();
             SettingForm.Show();
-            this.Hide();
+            this.Close();
         }
 
         private void buttonAirQuality_Click(object sender, EventArgs e)

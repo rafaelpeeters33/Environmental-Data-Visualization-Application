@@ -195,18 +195,19 @@
             // 
             // comboBoxMunicipality
             // 
+            comboBoxMunicipality.BackColor = SystemColors.Window;
             comboBoxMunicipality.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            comboBoxMunicipality.ForeColor = SystemColors.InfoText;
             comboBoxMunicipality.FormattingEnabled = true;
             comboBoxMunicipality.Location = new Point(508, 606);
             comboBoxMunicipality.Name = "comboBoxMunicipality";
             comboBoxMunicipality.Size = new Size(221, 38);
             comboBoxMunicipality.TabIndex = 46;
             comboBoxMunicipality.Text = "Commune";
+            comboBoxMunicipality.SelectedIndexChanged += comboBoxMunicipality_SelectedIndexChanged;
             // 
             // comboBoxDepartment
             // 
-            comboBoxDepartment.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-            comboBoxDepartment.AutoCompleteSource = AutoCompleteSource.ListItems;
             comboBoxDepartment.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
             comboBoxDepartment.FormattingEnabled = true;
             comboBoxDepartment.Location = new Point(275, 606);
@@ -215,6 +216,7 @@
             comboBoxDepartment.TabIndex = 45;
             comboBoxDepartment.TabStop = false;
             comboBoxDepartment.Text = "Département";
+            comboBoxDepartment.SelectedIndexChanged += comboBoxDepartment_SelectedIndexChanged_1;
             comboBoxDepartment.Leave += comboBoxDepartment_Leave;
             // 
             // labelTypeGraph

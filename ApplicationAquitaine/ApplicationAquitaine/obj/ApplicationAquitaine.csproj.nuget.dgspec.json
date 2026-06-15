@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "Z:\\SAE FIN ANNEE\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\ApplicationAquitaine.csproj": {}
+    "\\\\iut.bx\\Etudiants\\Home\\adducourneau\\Desktop\\projet fin d'année\\git\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\ApplicationAquitaine.csproj": {}
   },
   "projects": {
-    "Z:\\SAE FIN ANNEE\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\ApplicationAquitaine.csproj": {
+    "\\\\iut.bx\\Etudiants\\Home\\adducourneau\\Desktop\\projet fin d'année\\git\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\ApplicationAquitaine.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "Z:\\SAE FIN ANNEE\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\ApplicationAquitaine.csproj",
+        "projectUniqueName": "\\\\iut.bx\\Etudiants\\Home\\adducourneau\\Desktop\\projet fin d'année\\git\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\ApplicationAquitaine.csproj",
         "projectName": "ApplicationAquitaine",
-        "projectPath": "Z:\\SAE FIN ANNEE\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\ApplicationAquitaine.csproj",
-        "packagesPath": "C:\\Users\\rsarrazainpe\\.nuget\\packages\\",
-        "outputPath": "Z:\\SAE FIN ANNEE\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\obj\\",
+        "projectPath": "\\\\iut.bx\\Etudiants\\Home\\adducourneau\\Desktop\\projet fin d'année\\git\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\ApplicationAquitaine.csproj",
+        "packagesPath": "C:\\Users\\adducourneau\\.nuget\\packages\\",
+        "outputPath": "\\\\iut.bx\\Etudiants\\Home\\adducourneau\\Desktop\\projet fin d'année\\git\\sae.04-05\\ApplicationAquitaine\\ApplicationAquitaine\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "\\\\iut.bx\\Etudiants\\Home\\rsarrazainpe\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "\\\\iut.bx\\Etudiants\\Home\\adducourneau\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
