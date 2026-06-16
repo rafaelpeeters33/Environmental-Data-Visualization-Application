@@ -179,46 +179,52 @@ def remplirMeteo(indexDep) :
     for file in os.listdir("dossier_csv") :
         if file.startswith("Q") : 
             fichier2 = pd.read_csv("dossier_csv/" + file, sep=';',usecols=listecol2)
-            for index, row in fichier2.iterrows() :
-                commune_id="(select CMN_ID from T_COMMUNE_CMN where CMN_NOM='%s')" % (row["NOM_USUEL"])
-                cursor.execute(commune_id)
-                a=cursor.fetchall()
-                if len(a)==1 and row["NOM_USUEL"]!=None and row["AAAAMMJJ"]!=None and (row["RR"]!='' or row["TN"]!=''  or row["TX"]!=''  or row["TM"]!='' ):
-                    for col in liste.keys() : 
-                        if row["Q"+col]==1 :
-                            request1="INSERT INTO T_DONNEES_DNN (DNN_nom,DNN_unite,DNN_valeur) VALUES('%s', '%s', '%s')" % (liste[col][0],liste[col][1],row[col])
-                            cursor.execute(request1)
+            #fichier2['AAAAMMJJ'] = pd.to_datetime(fichier2['AAAAMMJJ'], format=r'%m/%d/%Y')
+            #print(fichier2["AAAAMMJJ"])
+            df_fichier2 = fichier2[fichier2["AAAAMMJJ"].astype(str).str.endswith('01')]
+            print(fichier2)
+            print(df_fichier2)
+            #for index, row in df_fichier2.iterrows() :
 
-                            if row["AAAAMMJJ"] not in listeDate :
-                                request4="INSERT INTO T_DATEJOURE_DTJ(DTJ_DATE_DEBUT) VALUES('%s')" % (row["AAAAMMJJ"])
-                                cursor.execute(request4)
-                                listeDate.append(row["AAAAMMJJ"])
-                            
-                            dataIndex+=1
-                            
-                            # print(row["NOM_USUEL"])
-                            # print(f"commune_code {commune_id}")
-                            
-                            request2="INSERT INTO SITUÉ (DNN_ID,CMN_ID) VALUES(%s,%s)" % (dataIndex, commune_id)
-                            cursor.execute(request2)
-                            
-                            DateIndex=("select ID_DTJ from T_DATEJOURE_DTJ where DTJ_DATE_DEBUT='%s'")%(row["AAAAMMJJ"])
-                            cursor.execute(DateIndex)
-                            a=cursor.fetchall()[0]['ID_DTJ']
-                            print(a)
-                            print(DateIndex)
-                            request3="INSERT INTO DÉROULÉ (DNN_ID,ID_DTJ) VALUES (%s,%s)" % (dataIndex, a)
-                            cursor.execute(request3)
+                # commune_id="(select CMN_ID from T_COMMUNE_CMN where CMN_NOM='%s')" % (row["NOM_USUEL"])
+                # cursor.execute(commune_id)
+                # a=cursor.fetchall()
+                # if len(a)==1 and row["NOM_USUEL"]!=None and row["AAAAMMJJ"]!=None and (row["RR"]!='' or row["TN"]!=''  or row["TX"]!=''  or row["TM"]!='' ):
+                #     for col in liste.keys() : 
+                #         if row["Q"+col]==1 :
+                #             request1="INSERT INTO T_DONNEES_DNN (DNN_nom,DNN_unite,DNN_valeur) VALUES('%s', '%s', '%s')" % (liste[col][0],liste[col][1],row[col])
+                #             cursor.execute(request1)
 
-                            mesure_id="(select CTG_ID from T_CATEGORIE_CTG where CTG_NOM='%s')"%(liste[col][0])
-                            request5="INSERT INTO POSSÈDE(CTG_ID,DNN_ID) VALUES (%s,%s)" % (mesure_id,dataIndex)
-                            cursor.execute(request5)
+                #             if row["AAAAMMJJ"] not in listeDate :
+                #                 request4="INSERT INTO T_DATEJOURE_DTJ(DTJ_DATE_DEBUT) VALUES('%s')" % (row["AAAAMMJJ"])
+                #                 cursor.execute(request4)
+                #                 listeDate.append(row["AAAAMMJJ"])
                             
-                            cnxn.commit()
+                #             dataIndex+=1
+                            
+                #             # print(row["NOM_USUEL"])
+                #             # print(f"commune_code {commune_id}")
+                            
+                #             request2="INSERT INTO SITUÉ (DNN_ID,CMN_ID) VALUES(%s,%s)" % (dataIndex, commune_id)
+                #             cursor.execute(request2)
+                            
+                #             DateIndex=("select ID_DTJ from T_DATEJOURE_DTJ where DTJ_DATE_DEBUT='%s'")%(row["AAAAMMJJ"])
+                #             cursor.execute(DateIndex)
+                #             a=cursor.fetchall()[0]['ID_DTJ']
+                #             print(a)
+                #             print(DateIndex)
+                #             request3="INSERT INTO DÉROULÉ (DNN_ID,ID_DTJ) VALUES (%s,%s)" % (dataIndex, a)
+                #             cursor.execute(request3)
+
+                #             mesure_id="(select CTG_ID from T_CATEGORIE_CTG where CTG_NOM='%s')"%(liste[col][0])
+                #             request5="INSERT INTO POSSÈDE(CTG_ID,DNN_ID) VALUES (%s,%s)" % (mesure_id,dataIndex)
+                #             cursor.execute(request5)
+                            
+                #             cnxn.commit()
 
 #remplirComDep()
-remplirIncendie(indexDep())
-remplirInondation(indexDep())
+# remplirIncendie(indexDep())
+# remplirInondation(indexDep())
 remplirMeteo(indexDep())
 
 
