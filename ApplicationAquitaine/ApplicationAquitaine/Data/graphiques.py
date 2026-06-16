@@ -232,3 +232,87 @@ generer_graphe_boite_a_moustaches('20000101', '20200201', 'incendie', 'commune',
 generer_graphe_barres('20000101','20200201','incendie','commune', 'avg', 'Pessac')
 generer_graphe_ligne('19900101','20200201','incendie','commune', 'sum', 'Pessac')
 plt.show()
+
+
+
+
+def generer_graphe_nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
+    
+    # ECHELLE 
+    if echelle == 'region':
+        colonne_cible = "'Nouvelle-Aquitaine'" 
+        filtre_geo = ""
+        titre_zone = "Nouvelle-Aquitaine"
+    elif echelle == 'departement':
+        colonne_cible = "DPT_NOM"
+        filtre_geo = f"AND T_DEPARTEMENT_DPT.DPT_NOM = '{nom_zone}'"
+        titre_zone = nom_zone
+    else: 
+        colonne_cible = "CMN_NOM"
+        filtre_geo = f"AND T_COMMUNE_CMN.CMN_NOM = '{nom_zone}'"
+        titre_zone = nom_zone
+
+    # COULEUR
+    if categorie_risque == 'incendie':
+        couleur_barre = "#F10C0C"
+    elif categorie_risque == 'inondation':
+        couleur_barre = '#1E88E5' 
+    else:
+        couleur_barre = "#DF319F" 
+
+    # REQUETE 
+    requete_sql = f"""
+        SELECT {colonne_cible} AS NOM_ZONE, DNN_VALEUR,DTJ_DATE_DEBUT,DTJ_DATE_FIN
+        
+        FROM T_DONNEES_DNN 
+        JOIN situé ON T_DONNEES_DNN.DNN_ID = situé.DNN_ID
+        JOIN T_COMMUNE_CMN ON situé.CMN_ID = T_COMMUNE_CMN.CMN_ID
+        JOIN T_DEPARTEMENT_DPT ON T_COMMUNE_CMN.DPT_ID = T_DEPARTEMENT_DPT.DPT_ID 
+        JOIN déroulé ON T_DONNEES_DNN.DNN_ID = déroulé.DNN_ID
+        JOIN T_DATEJOURE_DTJ ON déroulé.ID_DTJ = T_DATEJOURE_DTJ.ID_DTJ
+        JOIN possède ON T_DONNEES_DNN.DNN_ID = possède.DNN_ID
+        JOIN T_CATEGORIE_CTG ON possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+       
+        WHERE T_CATEGORIE_CTG.CTG_NOM = '{categorie_risque}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT >= '{date_debut}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}'
+        {filtre_geo}
+    """
+    df_graphes = pd.read_sql(requete_sql, cnxn, coerce_float=False)
+    df_graphes['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphes['DTJ_DATE_DEBUT'])
+    df_graphes['DTJ_DATE_FIN'] = pd.to_datetime(df_graphes['DTJ_DATE_FIN'])
+
+    #On soustrait les dates
+    dateDebut = pd.to_datetime(date_debut, format='%Y%m%d')
+    dateFin = pd.to_datetime(date_fin, format='%Y%m%d')
+    periode= (dateFin-dateDebut).days
+    
+    if df_graphes.empty:
+        print(f"Aucune donnée trouvée pour {titre_zone}.")
+        return None
+    #On verifie si superieur a un an
+    if periode>365:
+       df_graphes['PERIODE']=df_graphes['DTJ_DATE_DEBUT'].dt.year
+    elif periode<=365:
+       df_graphes['PERIODE']=df_graphes['DTJ_DATE_DEBUT'].dt.month
+
+    graphTitle = f'Nombre de {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
+     
+    # PLOT
+    ax = df_graphes.plot(
+        kind='scatter', 
+        x='PERIODE', 
+        y='DNN_VALEUR', 
+        title=graphTitle,
+        legend=False,
+        color=couleur_barre
+    )
+    nom_fichier = f'{categorie_risque}_{titre_zone}.png'
+    
+    plt.savefig(nom_fichier, bbox_inches='tight')
+    plt.show()
+
+    return nom_fichier
+
+generer_graphe_nuage_de_points('19900101','20200201','incendie','commune', 'Pessac')
+plt.show()
