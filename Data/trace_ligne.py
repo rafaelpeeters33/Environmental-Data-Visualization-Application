@@ -64,30 +64,52 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     df_graphique = pd.read_sql(requete_sql, cnxn, coerce_float=False)
     return df_graphique, titre_zone, couleur_barre
 
-################################################# GRAPHIQUES BOITES A MOUSTACHES ###########################################################
+################################################# GRAPHIQUES LIGNES ###########################################################
 
-def boite_a_moustaches(date_debut,date_fin, categorie_risque, echelle, nom_zone=None):
+def trace_ligne(date_debut, date_fin,categorie_risque, echelle, agregation, nom_zone=None):
+   
     df_graphique, titre_zone, couleur_barre, = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
     
-    titre = f'Distribution des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
+    df_graphique['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphique['DTJ_DATE_DEBUT'])
+    df_graphique['DTJ_DATE_FIN'] = pd.to_datetime(df_graphique['DTJ_DATE_FIN'])
 
+    dateDebut = pd.to_datetime(date_debut, format='%Y%m%d')
+    dateFin = pd.to_datetime(date_fin, format='%Y%m%d')
+    periode= (dateFin-dateDebut).days
+   
+    if periode>365:
+        df_graphique['PERIODE']=df_graphique['DTJ_DATE_DEBUT'].dt.year
+    elif periode<=365:
+        df_graphique['PERIODE']=df_graphique['DTJ_DATE_DEBUT'].dt.month
+       
+    # AGEGATIONS
+    if agregation == 'avg':
+        df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
+        titre = f'Evolution de la moyenne des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
+    elif agregation == 'sum':
+        df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].sum().reset_index()
+        titre = f'Evolution de la somme des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
+    elif agregation == 'count':
+        df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].count().reset_index()
+        titre = f'Evolution du nombre de {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
+     
     # PLOT ET SAVE
-    ax = df_graphique.plot(kind='box', column='DNN_VALEUR', by='NOM_ZONE' , title=titre, legend=False, color=couleur_barre, rot=0)
+    ax = df_final.plot( kind='line', x='PERIODE', y='DNN_VALEUR', title=titre, legend=False, color=couleur_barre, rot=0)
    
     nom_fichier = 'graphique.png'
     plt.savefig(nom_fichier, bbox_inches='tight')
-    plt.show()
+    plt.close()
+    
+    return df_final
 
-    return df_graphique
-
-def boite_a_moustache_comparaison(valeurs):
+def trace_ligne_comparaison(valeurs):
     df_graphique = []
     for i in valeurs:
-        df_graphique.append(boite_a_moustaches(*i))
+        df_graphique.append(trace_ligne(i[0],i[1],i[2],i[3],i[4],i[5]))
     df_final = df_graphique[0]
     for df_suivant in df_graphique[1:]:
         df_final = pd.merge(df_final, df_suivant, on='NOM_ZONE', how='outer')
-    """
+ 
     liste_couleurs = []
     for col in df_final.columns:
         if col == 'NOM_ZONE':
@@ -99,16 +121,14 @@ def boite_a_moustache_comparaison(valeurs):
             liste_couleurs.append('#1E88E5') 
         else:
             liste_couleurs.append('#F57C00')
-    """
+
     titre = f'Comparaison de données'
 
     #PLOT ET SAVE
-    ax = df_final.plot(kind='box', x='NOM_ZONE', title=titre,legend=False, rot=0)
+    ax = df_final.plot(kind='line', x='PERIODE',title=titre, legend=False, rot=0)
 
     nom_fichier = 'graphique.png'
     plt.savefig(nom_fichier, bbox_inches='tight')
-    plt.show()
+    plt.close()
 
-boite_a_moustaches(19900101,20200201,'incendie','region')
-valeurs = [['19900101','20200201','incendie','region'],['19900101','20200201','incendie','departement','Gironde'],['19900101','20200201','incendie','commune','Pessac']]
-boite_a_moustache_comparaison(valeurs)
+
