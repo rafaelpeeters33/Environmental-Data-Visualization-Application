@@ -6,32 +6,67 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.Intrinsics.Arm;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ApplicationAquitaine
 {
     public partial class Setting : Form
     {
-        
-        private readonly String scriptListe;
-        private readonly String dataPath;
-        private readonly String resultImageName;
+        private string theData;
+        private string theDep;
+        private string theCom;
+        private string theEnd;
+        private string theStart;
+        private string theGraphique;
+        private string echelle;
+        private string agregation;
+        private string nom_zone;
+        private readonly string dataPath;
+
 
         public Setting()
         {
             InitializeComponent();
             dataPath = @"..\..\..\Data\";
-            scriptListe = dataPath + "listes.py";
+
+            theStart = dateTimePickerStart.Value.ToString("yyyy-MM-dd");
+            theEnd = dateTimePickerEnd.Value.ToString("yyyy-MM-dd");
 
             remplire_CB_Dep();
-            remplire_CB_Com();
+            remplire_CB_Data();
+            comboBoxMunicipality.Enabled = false;
+            comboBoxTypeGraph.Items.Clear();
+            comboBoxTypeGraph.Items.Add("boite a moustaches");
+            comboBoxTypeGraph.Items.Add("ligne");
+
+            comboBoxAgregation.Items.Clear();
+            comboBoxAgregation.Items.Add("avg");
+            comboBoxAgregation.Items.Add("sum");
+            comboBoxAgregation.Items.Add("count");
+
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+
+
+        }
+
+        private void remplire_CB_Data()
+        {
+            List<string> datas = lancerScriptGetAllData();
+            DataComboBox.Items.Clear();
+            foreach (string data in datas)
+            {
+                string data_minuscule = data.ToLower();
+                DataComboBox.Items.Add(data_minuscule);
+            }
         }
 
         private void remplire_CB_Dep()
         {
-            List<string> departements = LancerScript(Scripts_Enum.script_Get_All_Departement);
+            List<string> departements = lancerScriptGetAllDepartement();
             comboBoxDepartment.Items.Clear(); // vide la liste avant de remplir
             foreach (string dept in departements)
             {
@@ -42,11 +77,11 @@ namespace ApplicationAquitaine
         private void remplire_CB_Com()
         {
             string dpt = comboBoxDepartment.Text;
-            if (!(dpt == ""))
+            if (!string.IsNullOrEmpty(dpt))
             {
-                List<string> communes = LancerScript(Scripts_Enum.script_Get_Communnes, dpt);
+                List<string> communes = lancerScriptDetAllCommune(dpt);
                 comboBoxMunicipality.Items.Clear();
-                foreach(string commun in communes)
+                foreach (string commun in communes)
                 {
                     comboBoxMunicipality.Items.Add(commun);
                 }
@@ -64,167 +99,314 @@ namespace ApplicationAquitaine
         {
             Main MainForm = new Main();
             MainForm.Show();
-            this.Hide();
+            this.Close();
         }
 
-        private void buttonAirQuality_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void buttonClimate_Click(object sender, EventArgs e)
-        {
-
-        }
 
         private void buttonValidate_Click(object sender, EventArgs e)
         {
-            string cheminFichier = @"..\..\..\Data\incendie_Pessac_max.png";
-            string cheminAbsolu = Path.GetFullPath(cheminFichier);
-            if (File.Exists(cheminAbsolu))
+            if (theGraphique == null)
             {
-                if (pictureBox.Image != null) pictureBox.Image.Dispose();
-
-                using (FileStream fs = new FileStream(cheminAbsolu, FileMode.Open, FileAccess.Read))
-                {
-                    pictureBox.Image = Image.FromStream(fs);
-                }
-                pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+                MessageBox.Show("Vous devez choisir un type de graphe à afficher");
+                return;
             }
-            else
+            if (theData == null)
             {
-                MessageBox.Show("Le fichier n'est pas trouvé ici : \n" + cheminAbsolu);
+                MessageBox.Show("Vous devez choisir une donnée à afficher");
+                return;
             }
-        }
-
-        private void buttonDownload_Click(object sender, EventArgs e)
-        {
-
-        }
-        private string ExecuterPython(string commande)
-        {
-            ProcessStartInfo start = new ProcessStartInfo();
-            start.FileName = "python";
-            start.Arguments = @"..\..\..\Data\listes.py";
-            start.RedirectStandardInput = true;
-            start.RedirectStandardOutput = true;
-            start.UseShellExecute = false;
-            start.CreateNoWindow = true;
-
-            using (Process process = Process.Start(start))
+            if (theGraphique == "ligne" && agregation == null)
             {
-                process.StandardInput.WriteLine(commande);
-                process.StandardInput.Close();
-                string resultat = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-
-                return resultat;
+                MessageBox.Show("Vous devez choisir une agrégation si vous voulez afficher un graphique en ligne");
+                return;
             }
+
+            if (theGraphique == "boite a moustaches")
+                boite_A_Moustache_Create();
+            else if (theGraphique == "ligne")
+                ligne_Graphique_Create();
         }
 
-     
-
-
-        private void comboBoxDepartment_SelectedIndexChanged(object sender, EventArgs e)
+        private void ligne_Graphique_Create()
         {
-            if (comboBoxDepartment.SelectedItem == null) return;
-            string dptChoisi = comboBoxDepartment.SelectedItem.ToString();
-            comboBoxMunicipality.Items.Clear();
-            comboBoxMunicipality.Text = "Chargement...";
-            string resultat = ExecuterPython($"communes|{dptChoisi}");
-            string[] lignes = resultat.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            comboBoxMunicipality.Items.AddRange(lignes);
-            comboBoxMunicipality.Text = "Commune";
-            comboBoxMunicipality.Enabled = true;
-        }
-
-        private void comboBoxDepartment_Leave(object sender, EventArgs e)
-        {
-            int index = comboBoxDepartment.FindStringExact(comboBoxDepartment.Text);
-            if (index == -1)
-            {
-                comboBoxDepartment.Text = "Département";
-                comboBoxDepartment.SelectedIndex = -1;
-                comboBoxMunicipality.Enabled = false;
-                comboBoxMunicipality.Items.Clear();
-            }
-            else
-            {
-                comboBoxDepartment.SelectedIndex = index;
-                comboBoxDepartment_SelectedIndexChanged(sender, e);
-            }
-        }
-
-        private void comboBoxDepartment_SelectedIndexChanged_1(object sender, EventArgs e)
-        {
-            remplire_CB_Com();
-        }
-
-        private List<string> LancerScript(Scripts_Enum scripts, string argument = "")
-        {
-
 
             Process python = new();
+            if (theDep == null)
+            {
+                echelle = "region";
+                nom_zone = "";
+            }
+
+            else if (theCom == null)
+            {
+                echelle = "departement";
+                nom_zone = theDep;
+            }
+            else
+            {
+                echelle = "commune";
+                nom_zone = theCom;
+            }
+
             python.StartInfo.FileName = "python";
-            python.StartInfo.Arguments = scriptListe + " " + scripts.ToString()  + (argument != "" ? " " + argument : "");
+
+            python.StartInfo.ArgumentList.Add(dataPath + "script_Generer_Graphique_Ligne.py");
+            python.StartInfo.ArgumentList.Add(theStart.ToString());
+            python.StartInfo.ArgumentList.Add(theEnd.ToString());
+            python.StartInfo.ArgumentList.Add(theData);
+            python.StartInfo.ArgumentList.Add(echelle);
+            python.StartInfo.ArgumentList.Add(agregation);
+            python.StartInfo.ArgumentList.Add(nom_zone);
+
             python.StartInfo.CreateNoWindow = true;
             python.StartInfo.UseShellExecute = false;
             python.Start();
             python.WaitForExit();
 
+            string erreurs = python.StandardError.ReadToEnd();
+            python.WaitForExit();
 
-           
-
-            List<string> liste =  new List<string>();
-
-            switch (scripts)
+            if (!string.IsNullOrEmpty(erreurs))
             {
-                case Scripts_Enum.script_Get_All_Departement:
-                    liste = lancerScriptGetAllDepartement();
-
-                    break;
-
-                case Scripts_Enum.script_Get_Communnes:
-                    liste = lancerScriptDetAllCommune(argument);
-                    break;
-
-                default:
-                    return new List<string>();
+                MessageBox.Show("Erreur Python : " + erreurs);
+                return;
             }
-            return liste;
+
+            DisplayResult(dataPath + "setting.png");
+        }
+
+
+        private void boite_A_Moustache_Create()
+        {
+            if (theDep == null)
+            {
+                echelle = "region";
+                nom_zone = "Aquitaine";
+            }
+            else if (theCom == null)
+            {
+                echelle = "departement";
+                nom_zone = theDep;
+            }
+            else
+            {
+                echelle = "commune";
+                nom_zone = theCom;
+            }
+
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "python",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+
+            startInfo.ArgumentList.Add(dataPath + "boite_moustache.py");
+            startInfo.ArgumentList.Add(theStart);
+            startInfo.ArgumentList.Add(theEnd);
+            startInfo.ArgumentList.Add(theData);
+            startInfo.ArgumentList.Add(echelle);
+            startInfo.ArgumentList.Add(nom_zone);
+            startInfo.ArgumentList.Add("false");
+
+            Process python = new Process { StartInfo = startInfo };
+            python.Start();
+
+            string erreurs = python.StandardError.ReadToEnd();
+            python.WaitForExit();
+
+            if (python.ExitCode != 0)
+            {
+                MessageBox.Show("Erreur Python : " + erreurs);
+                return;
+            }
+
+
+            DisplayResult(dataPath + "setting.png");
+        }
+
+        private void DisplayResult(string fileNameImage)
+        {
+            if (!File.Exists(fileNameImage))
+            {
+                MessageBox.Show("Image Introuvable : " + fileNameImage);
+                return;
+            }
+
+            Image? precedente = pictureBox.Image;
+
+            byte[] bytes = File.ReadAllBytes(fileNameImage);
+            using (MemoryStream ms = new MemoryStream(bytes))
+            {
+                pictureBox.Image = new Bitmap(ms);
+            }
+
+            precedente?.Dispose();
+        }
+
+
+        private void buttonDownload_Click(object sender, EventArgs e)
+        {
 
         }
 
-        private List<string> lancerScriptDetAllCommune(String nomDpt)
+
+        private void comboBoxDepartment_Leave(object sender, EventArgs e)
         {
-            string cheminFichier = Path.Combine(Path.GetDirectoryName(scriptListe), "Dep_All_Com.txt");
+
+        }
+
+        private void comboBoxDepartment_SelectedIndexChanged_1(object sender, EventArgs e)
+        {
+            remplire_CB_Com();
+            comboBoxMunicipality.Enabled = true;
+            comboBoxMunicipality.Text = null;
+            theDep = comboBoxDepartment.Text;
+
+        }
 
 
+        private List<string> lancerScriptDetAllCommune(string nomDpt)
+        {
+            string scriptPath = Path.GetFullPath(dataPath + "script_Get_Communes.py");
+            string dossierData = Path.GetFullPath(dataPath);
+
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = "python";
+            //Guillemets autour des chemins
+            startInfo.Arguments = $"\"{scriptPath}\" \"{nomDpt}\" \"{dossierData}\"";
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardError = true;
+            startInfo.RedirectStandardOutput = true;
+
+            Process python = new Process();
+            python.StartInfo = startInfo;
+            python.Start();
+
+            string erreurs = python.StandardError.ReadToEnd();
+            python.WaitForExit();
+
+            if (erreurs != "")
+            {
+                MessageBox.Show("Erreur Python : " + erreurs);
+                return new List<string>();
+            }
+
+            string cheminFichier = Path.Combine(dossierData, "Dep_All_Com.txt");
             if (!File.Exists(cheminFichier))
             {
                 MessageBox.Show("Fichier introuvable : " + cheminFichier);
                 return new List<string>();
             }
 
-            List<string> resultats = File.ReadAllLines(cheminFichier, Encoding.UTF8).ToList();
-
-            return resultats;
+            return File.ReadAllLines(cheminFichier, Encoding.UTF8).ToList();
         }
-
         private List<string> lancerScriptGetAllDepartement()
         {
-            string cheminFichier = Path.Combine(Path.GetDirectoryName(scriptListe), "All_Dep.txt");
+            string scriptPath = Path.GetFullPath(dataPath + "script_Get_All_Departement.py");
+            string dossierData = Path.GetFullPath(dataPath);
 
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = "python";
+            startInfo.Arguments = $"\"{scriptPath}\" \"{dossierData}\"";
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardError = true;
+            startInfo.RedirectStandardOutput = true;
 
+            Process python = new Process();
+            python.StartInfo = startInfo;
+            python.Start();
+
+            string erreurs = python.StandardError.ReadToEnd();
+            python.WaitForExit();
+
+            if (erreurs != "")
+            {
+                MessageBox.Show("Erreur Python : " + erreurs);
+                return new List<string>();
+            }
+
+            string cheminFichier = Path.Combine(dossierData, "All_Dep.txt");
             if (!File.Exists(cheminFichier))
             {
                 MessageBox.Show("Fichier introuvable : " + cheminFichier);
                 return new List<string>();
             }
 
-            List<string> resultats = File.ReadAllLines(cheminFichier, Encoding.UTF8).ToList();
+            return File.ReadAllLines(cheminFichier, Encoding.UTF8).ToList();
+        }
 
-            return resultats;
+        private List<string> lancerScriptGetAllData()
+        {
+            string scriptPath = Path.GetFullPath(dataPath + "script_Get_All_Categorie.py");
+            string dossierData = Path.GetFullPath(dataPath);
+
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = "python";
+            //  Guillemets autour des chemins pour gérer les espaces
+            startInfo.Arguments = $"\"{scriptPath}\" \"{dossierData}\"";
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardError = true;
+            startInfo.RedirectStandardOutput = true;
+
+            Process python = new Process();
+            python.StartInfo = startInfo;
+            python.Start();
+
+            string erreurs = python.StandardError.ReadToEnd();
+            python.WaitForExit();
+
+            if (erreurs != "")
+            {
+                MessageBox.Show("Erreur Python : " + erreurs);
+                return new List<string>();
+            }
+
+            string cheminFichier = Path.Combine(dossierData, "All_CTG.txt");
+            if (!File.Exists(cheminFichier))
+            {
+                MessageBox.Show("Fichier introuvable : " + cheminFichier);
+                return new List<string>();
+            }
+
+            return File.ReadAllLines(cheminFichier, Encoding.UTF8).ToList();
+        }
+
+        private void DataComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            theData = DataComboBox.Text;
+        }
+
+        private void comboBoxMunicipality_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            theCom = comboBoxMunicipality.Text;
+        }
+
+
+
+        private void comboBoxTypeGraph_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            theGraphique = comboBoxTypeGraph.Text;
+        }
+
+        private void dateTimePickerStart_ValueChanged(object sender, EventArgs e)
+        {
+            theStart = theStart = dateTimePickerStart.Value.ToString("yyyy-MM-dd");
+        }
+
+        private void dateTimePickerEnd_ValueChanged(object sender, EventArgs e)
+        {
+            theEnd = dateTimePickerEnd.Value.ToString("yyyy-MM-dd");
+        }
+
+        private void comboBoxAgregation_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            agregation = comboBoxAgregation.Text;
         }
     }
 }

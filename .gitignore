@@ -1,0 +1,12 @@
+# Cache et paramètres Visual Studio
+.vs/
+*.suo
+*.user
+*.sln.docstates
+
+# Fichiers de compilation (Build)
+[Bb]in/
+[Oo]bj/
+
+# Fichiers système
+Thumbs.db

@@ -28,8 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            numericUpDownStart = new NumericUpDown();
-            numericUpDownEnd = new NumericUpDown();
             labelSetting = new Label();
             buttonValidate = new Button();
             labelPeriod = new Label();
@@ -49,44 +47,15 @@
             label6 = new Label();
             label7 = new Label();
             label5 = new Label();
-            airQualityButton = new RadioButton();
-            floodButton = new RadioButton();
             label9 = new Label();
-            fireButton = new RadioButton();
-            climateButton = new RadioButton();
-            stormButton = new RadioButton();
-            regionButton = new RadioButton();
-            panel1 = new Panel();
-            municipalityButton = new RadioButton();
-            departmentButton = new RadioButton();
             pictureBox = new PictureBox();
-            ((System.ComponentModel.ISupportInitialize)numericUpDownStart).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numericUpDownEnd).BeginInit();
-            panel1.SuspendLayout();
+            DataComboBox = new ComboBox();
+            dateTimePickerStart = new DateTimePicker();
+            dateTimePickerEnd = new DateTimePicker();
+            labelAgregation = new Label();
+            comboBoxAgregation = new ComboBox();
             ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             SuspendLayout();
-            // 
-            // numericUpDownStart
-            // 
-            numericUpDownStart.Font = new Font("Segoe UI", 20F);
-            numericUpDownStart.Location = new Point(159, 758);
-            numericUpDownStart.Maximum = new decimal(new int[] { 2025, 0, 0, 0 });
-            numericUpDownStart.Minimum = new decimal(new int[] { 1945, 0, 0, 0 });
-            numericUpDownStart.Name = "numericUpDownStart";
-            numericUpDownStart.Size = new Size(120, 43);
-            numericUpDownStart.TabIndex = 5;
-            numericUpDownStart.Value = new decimal(new int[] { 1945, 0, 0, 0 });
-            // 
-            // numericUpDownEnd
-            // 
-            numericUpDownEnd.Font = new Font("Segoe UI", 20F);
-            numericUpDownEnd.Location = new Point(347, 761);
-            numericUpDownEnd.Maximum = new decimal(new int[] { 2026, 0, 0, 0 });
-            numericUpDownEnd.Minimum = new decimal(new int[] { 1946, 0, 0, 0 });
-            numericUpDownEnd.Name = "numericUpDownEnd";
-            numericUpDownEnd.Size = new Size(120, 43);
-            numericUpDownEnd.TabIndex = 6;
-            numericUpDownEnd.Value = new decimal(new int[] { 1946, 0, 0, 0 });
             // 
             // labelSetting
             // 
@@ -202,6 +171,7 @@
             comboBoxMunicipality.Size = new Size(221, 38);
             comboBoxMunicipality.TabIndex = 46;
             comboBoxMunicipality.Text = "Commune";
+            comboBoxMunicipality.SelectedIndexChanged += comboBoxMunicipality_SelectedIndexChanged;
             // 
             // comboBoxDepartment
             // 
@@ -240,6 +210,7 @@
             comboBoxTypeGraph.Name = "comboBoxTypeGraph";
             comboBoxTypeGraph.Size = new Size(281, 45);
             comboBoxTypeGraph.TabIndex = 50;
+            comboBoxTypeGraph.SelectedIndexChanged += comboBoxTypeGraph_SelectedIndexChanged;
             // 
             // label2
             // 
@@ -298,170 +269,12 @@
             label5.Size = new Size(654, 10);
             label5.TabIndex = 61;
             // 
-            // airQualityButton
-            // 
-            airQualityButton.Appearance = Appearance.Button;
-            airQualityButton.BackColor = Color.FromArgb(194, 226, 196);
-            airQualityButton.FlatAppearance.BorderColor = Color.White;
-            airQualityButton.FlatAppearance.CheckedBackColor = Color.FromArgb(155, 181, 157);
-            airQualityButton.FlatStyle = FlatStyle.Flat;
-            airQualityButton.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            airQualityButton.ForeColor = Color.Black;
-            airQualityButton.Location = new Point(155, 409);
-            airQualityButton.Name = "airQualityButton";
-            airQualityButton.Size = new Size(187, 43);
-            airQualityButton.TabIndex = 68;
-            airQualityButton.TabStop = true;
-            airQualityButton.Text = "Qualité de l'air";
-            airQualityButton.TextAlign = ContentAlignment.MiddleCenter;
-            airQualityButton.UseVisualStyleBackColor = false;
-            // 
-            // floodButton
-            // 
-            floodButton.Appearance = Appearance.Button;
-            floodButton.BackColor = Color.FromArgb(194, 226, 196);
-            floodButton.FlatAppearance.BorderColor = Color.White;
-            floodButton.FlatAppearance.CheckedBackColor = Color.FromArgb(155, 181, 157);
-            floodButton.FlatStyle = FlatStyle.Flat;
-            floodButton.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            floodButton.ForeColor = Color.Black;
-            floodButton.Location = new Point(261, 468);
-            floodButton.Name = "floodButton";
-            floodButton.Size = new Size(187, 43);
-            floodButton.TabIndex = 72;
-            floodButton.TabStop = true;
-            floodButton.Text = "Inondations";
-            floodButton.TextAlign = ContentAlignment.MiddleCenter;
-            floodButton.UseVisualStyleBackColor = false;
-            // 
             // label9
             // 
             label9.Location = new Point(22, 539);
             label9.Name = "label9";
             label9.Size = new Size(650, 2);
             label9.TabIndex = 74;
-            // 
-            // fireButton
-            // 
-            fireButton.Appearance = Appearance.Button;
-            fireButton.BackColor = Color.FromArgb(194, 226, 196);
-            fireButton.FlatAppearance.BorderColor = Color.White;
-            fireButton.FlatAppearance.CheckedBackColor = Color.FromArgb(155, 181, 157);
-            fireButton.FlatStyle = FlatStyle.Flat;
-            fireButton.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            fireButton.ForeColor = Color.Black;
-            fireButton.Location = new Point(30, 466);
-            fireButton.Name = "fireButton";
-            fireButton.Size = new Size(187, 43);
-            fireButton.TabIndex = 76;
-            fireButton.TabStop = true;
-            fireButton.Text = "Incendies";
-            fireButton.TextAlign = ContentAlignment.MiddleCenter;
-            fireButton.UseVisualStyleBackColor = false;
-            // 
-            // climateButton
-            // 
-            climateButton.Appearance = Appearance.Button;
-            climateButton.BackColor = Color.FromArgb(194, 226, 196);
-            climateButton.FlatAppearance.BorderColor = Color.White;
-            climateButton.FlatAppearance.CheckedBackColor = Color.FromArgb(155, 181, 157);
-            climateButton.FlatStyle = FlatStyle.Flat;
-            climateButton.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            climateButton.ForeColor = Color.Black;
-            climateButton.Location = new Point(406, 409);
-            climateButton.Name = "climateButton";
-            climateButton.Size = new Size(187, 43);
-            climateButton.TabIndex = 77;
-            climateButton.TabStop = true;
-            climateButton.Text = "Climat";
-            climateButton.TextAlign = ContentAlignment.MiddleCenter;
-            climateButton.UseVisualStyleBackColor = false;
-            // 
-            // stormButton
-            // 
-            stormButton.Appearance = Appearance.Button;
-            stormButton.BackColor = Color.FromArgb(194, 226, 196);
-            stormButton.FlatAppearance.BorderColor = Color.White;
-            stormButton.FlatAppearance.CheckedBackColor = Color.FromArgb(155, 181, 157);
-            stormButton.FlatStyle = FlatStyle.Flat;
-            stormButton.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            stormButton.ForeColor = Color.Black;
-            stormButton.Location = new Point(493, 468);
-            stormButton.Name = "stormButton";
-            stormButton.Size = new Size(187, 43);
-            stormButton.TabIndex = 78;
-            stormButton.TabStop = true;
-            stormButton.Text = "Tempêtes";
-            stormButton.TextAlign = ContentAlignment.MiddleCenter;
-            stormButton.UseVisualStyleBackColor = false;
-            // 
-            // regionButton
-            // 
-            regionButton.Appearance = Appearance.Button;
-            regionButton.BackColor = Color.FromArgb(194, 226, 196);
-            regionButton.FlatAppearance.BorderColor = Color.White;
-            regionButton.FlatAppearance.CheckedBackColor = Color.FromArgb(155, 181, 157);
-            regionButton.FlatStyle = FlatStyle.Flat;
-            regionButton.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            regionButton.ForeColor = Color.Black;
-            regionButton.ImageAlign = ContentAlignment.TopCenter;
-            regionButton.Location = new Point(28, 3);
-            regionButton.Name = "regionButton";
-            regionButton.Size = new Size(159, 29);
-            regionButton.TabIndex = 80;
-            regionButton.TabStop = true;
-            regionButton.Text = "Valider";
-            regionButton.TextAlign = ContentAlignment.MiddleCenter;
-            regionButton.UseVisualStyleBackColor = false;
-            // 
-            // panel1
-            // 
-            panel1.BackColor = Color.FromArgb(169, 24, 50);
-            panel1.Controls.Add(municipalityButton);
-            panel1.Controls.Add(departmentButton);
-            panel1.Controls.Add(regionButton);
-            panel1.Location = new Point(30, 650);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(699, 38);
-            panel1.TabIndex = 80;
-            // 
-            // municipalityButton
-            // 
-            municipalityButton.Appearance = Appearance.Button;
-            municipalityButton.BackColor = Color.FromArgb(194, 226, 196);
-            municipalityButton.FlatAppearance.BorderColor = Color.White;
-            municipalityButton.FlatAppearance.CheckedBackColor = Color.FromArgb(155, 181, 157);
-            municipalityButton.FlatStyle = FlatStyle.Flat;
-            municipalityButton.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            municipalityButton.ForeColor = Color.Black;
-            municipalityButton.ImageAlign = ContentAlignment.TopCenter;
-            municipalityButton.Location = new Point(506, 3);
-            municipalityButton.Name = "municipalityButton";
-            municipalityButton.Size = new Size(159, 29);
-            municipalityButton.TabIndex = 81;
-            municipalityButton.TabStop = true;
-            municipalityButton.Text = "Valider";
-            municipalityButton.TextAlign = ContentAlignment.MiddleCenter;
-            municipalityButton.UseVisualStyleBackColor = false;
-            // 
-            // departmentButton
-            // 
-            departmentButton.Appearance = Appearance.Button;
-            departmentButton.BackColor = Color.FromArgb(194, 226, 196);
-            departmentButton.FlatAppearance.BorderColor = Color.White;
-            departmentButton.FlatAppearance.CheckedBackColor = Color.FromArgb(155, 181, 157);
-            departmentButton.FlatStyle = FlatStyle.Flat;
-            departmentButton.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            departmentButton.ForeColor = Color.Black;
-            departmentButton.ImageAlign = ContentAlignment.TopCenter;
-            departmentButton.Location = new Point(259, 3);
-            departmentButton.Name = "departmentButton";
-            departmentButton.Size = new Size(159, 29);
-            departmentButton.TabIndex = 81;
-            departmentButton.TabStop = true;
-            departmentButton.Text = "Valider";
-            departmentButton.TextAlign = ContentAlignment.MiddleCenter;
-            departmentButton.UseVisualStyleBackColor = false;
             // 
             // pictureBox
             // 
@@ -471,20 +284,69 @@
             pictureBox.TabIndex = 81;
             pictureBox.TabStop = false;
             // 
+            // DataComboBox
+            // 
+            DataComboBox.Font = new Font("Segoe UI", 15.75F);
+            DataComboBox.FormattingEnabled = true;
+            DataComboBox.Location = new Point(149, 380);
+            DataComboBox.Name = "DataComboBox";
+            DataComboBox.Size = new Size(205, 38);
+            DataComboBox.TabIndex = 82;
+            DataComboBox.SelectedIndexChanged += DataComboBox_SelectedIndexChanged;
+            // 
+            // dateTimePickerStart
+            // 
+            dateTimePickerStart.Location = new Point(187, 775);
+            dateTimePickerStart.Name = "dateTimePickerStart";
+            dateTimePickerStart.Size = new Size(200, 23);
+            dateTimePickerStart.TabIndex = 83;
+            dateTimePickerStart.ValueChanged += dateTimePickerStart_ValueChanged;
+            // 
+            // dateTimePickerEnd
+            // 
+            dateTimePickerEnd.Location = new Point(436, 773);
+            dateTimePickerEnd.Name = "dateTimePickerEnd";
+            dateTimePickerEnd.Size = new Size(200, 23);
+            dateTimePickerEnd.TabIndex = 84;
+            dateTimePickerEnd.ValueChanged += dateTimePickerEnd_ValueChanged;
+            // 
+            // labelAgregation
+            // 
+            labelAgregation.AutoSize = true;
+            labelAgregation.BackColor = Color.FromArgb(169, 24, 50);
+            labelAgregation.Font = new Font("Segoe UI", 20F);
+            labelAgregation.ForeColor = SystemColors.ControlLightLight;
+            labelAgregation.Location = new Point(255, 895);
+            labelAgregation.Name = "labelAgregation";
+            labelAgregation.Size = new Size(163, 37);
+            labelAgregation.TabIndex = 85;
+            labelAgregation.Text = "Agregation :";
+            // 
+            // comboBoxAgregation
+            // 
+            comboBoxAgregation.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBoxAgregation.Font = new Font("Segoe UI", 20F);
+            comboBoxAgregation.FormattingEnabled = true;
+            comboBoxAgregation.Items.AddRange(new object[] { "Diagramme baton" });
+            comboBoxAgregation.Location = new Point(424, 896);
+            comboBoxAgregation.Name = "comboBoxAgregation";
+            comboBoxAgregation.Size = new Size(212, 45);
+            comboBoxAgregation.TabIndex = 86;
+            comboBoxAgregation.SelectedIndexChanged += comboBoxAgregation_SelectedIndexChanged;
+            // 
             // Setting
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImage = Properties.Resources.Background;
             ClientSize = new Size(1924, 1061);
+            Controls.Add(comboBoxAgregation);
+            Controls.Add(labelAgregation);
+            Controls.Add(dateTimePickerEnd);
+            Controls.Add(dateTimePickerStart);
+            Controls.Add(DataComboBox);
             Controls.Add(pictureBox);
-            Controls.Add(panel1);
-            Controls.Add(stormButton);
-            Controls.Add(climateButton);
-            Controls.Add(fireButton);
             Controls.Add(label9);
-            Controls.Add(floodButton);
-            Controls.Add(airQualityButton);
             Controls.Add(label7);
             Controls.Add(label6);
             Controls.Add(label5);
@@ -504,14 +366,9 @@
             Controls.Add(labelPeriod);
             Controls.Add(buttonValidate);
             Controls.Add(labelSetting);
-            Controls.Add(numericUpDownEnd);
-            Controls.Add(numericUpDownStart);
             Name = "Setting";
             Text = "Setting";
             WindowState = FormWindowState.Maximized;
-            ((System.ComponentModel.ISupportInitialize)numericUpDownStart).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numericUpDownEnd).EndInit();
-            panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox).EndInit();
             ResumeLayout(false);
             PerformLayout();
@@ -520,8 +377,6 @@
         #endregion
         private Button buttonRollBack;
         private Button buttonGraphType;
-        private NumericUpDown numericUpDownStart;
-        private NumericUpDown numericUpDownEnd;
         private Label labelSetting;
         private Button buttonValidate;
         private Label labelPeriod;
@@ -543,13 +398,13 @@
         private RadioButton airQualityButton;
         private RadioButton floodButton;
         private Label label9;
-        private RadioButton fireButton;
         private RadioButton climateButton;
         private RadioButton stormButton;
-        private RadioButton regionButton;
-        private Panel panel1;
-        private RadioButton municipalityButton;
-        private RadioButton departmentButton;
         private PictureBox pictureBox;
+        private ComboBox DataComboBox;
+        private DateTimePicker dateTimePickerStart;
+        private DateTimePicker dateTimePickerEnd;
+        private Label labelAgregation;
+        private ComboBox comboBoxAgregation;
     }
 }
