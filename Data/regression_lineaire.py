@@ -51,7 +51,6 @@ def traceAnalyse(x:npt.NDArray[np.float64],y:npt.NDArray[np.float64]):
     traceRegressionLineaire(a,b,min(x),max(x),10)
     print("Coefficient de corrélation linéaire:",R)
 
-################################################# GRAPHIQUE REGRESSION ###########################################################
 
 def regression_lineaire(date_debut, date_fin, cat_x, cat_y, echelle, agregation, nom_zone=None):
     
