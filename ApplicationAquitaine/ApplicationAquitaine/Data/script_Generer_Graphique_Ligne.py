@@ -7,9 +7,9 @@ import sys
 import pymssql 
 from IPython.display import display
 
-psw      = "ETD"
+psw      = "teap227q"
 server   = "info-mssql-etd"
-user     = "ETD"
+user     = "etd15"
 database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()

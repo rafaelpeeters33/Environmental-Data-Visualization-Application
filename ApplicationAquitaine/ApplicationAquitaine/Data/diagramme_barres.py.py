@@ -8,15 +8,25 @@ from IPython.display import display
 import numpy.typing as npt
 import numpy as np
 from math import sqrt
+import sys
 
 ################################################# CONNEXION ET REQUETE ###########################################################
 
-psw       = "ETD"
+psw       = "teap227q"
 server    = "info-mssql-etd"
-user      = "ETD"
-database = "MLR12345"
+user      = "etd15"
+database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
+
+start_date = str(sys.argv[1])
+end_date = str(sys.argv[2])
+risk_category = str(sys.argv[3])
+scale = str(sys.argv[4])
+aggregation = str(sys.argv[5])
+zone_name = str(sys.argv[6])
+comparaison = sys.argv[7].strip().lower() == "true"
+
 
 def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
    
@@ -62,6 +72,7 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     """
     
     df_graphique = pd.read_sql(requete_sql, cnxn, coerce_float=False)
+    df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     return df_graphique, titre_zone, couleur_barre
 
 ################################################# GRAPHIQUES BARRES ###########################################################
@@ -90,13 +101,35 @@ def diagramme_barres(date_debut, date_fin, categorie_risque, echelle, agregation
     nom_colonne = f"{categorie_risque}_{agregation}"
     df_final = df_final.rename(columns={'DNN_VALEUR': nom_colonne})
 
+    if df_graphique.empty:
+        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
+        
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
+                horizontalalignment='center', 
+                verticalalignment='center', 
+                fontsize=12, 
+                color='gray',
+                style='italic')
+        
+        ax.axis('off')
+        
+        plt.savefig(chemin_fichier, bbox_inches='tight')
+        plt.close()
+        
+        return df_graphique
+
+
     #PLOT ET SAVE
     ax = df_final.plot(kind='bar', x='NOM_ZONE', y=nom_colonne, title=titre,legend=False, color=couleur_barre, rot=0)
     
-    nom_fichier = 'graphique.png'
-    plt.savefig(nom_fichier, bbox_inches='tight')
+    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
+
+    plt.savefig(chemin_fichier)
+    plt.show()
     plt.close()
-    
+
     return df_final
 
 def diagramme_barres_comparaison(valeurs):
@@ -124,6 +157,9 @@ def diagramme_barres_comparaison(valeurs):
     #PLOT ET SAVE
     ax = df_final.plot(kind='bar', x='NOM_ZONE',title=titre,color=liste_couleurs, legend=False, rot=0)
 
-    nom_fichier = 'graphique.png'
-    plt.savefig(nom_fichier, bbox_inches='tight')
+    plt.savefig('graphique_comparaison_aires.png', bbox_inches='tight')
+    plt.show()
     plt.close()
+
+if (comparaison == False) :
+    diagramme_barres(start_date, end_date, risk_category, scale, aggregation, zone_name)

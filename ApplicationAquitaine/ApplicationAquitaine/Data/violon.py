@@ -8,15 +8,30 @@ from IPython.display import display
 import numpy.typing as npt
 import numpy as np
 from math import sqrt
+import sys
 
-################################################# CONNEXION ET REQUETE ###########################################################
-
-psw       = "ETD"
+psw       = "teap227q"
 server    = "info-mssql-etd"
-user      = "ETD"
-database = "MLR12345"
+user      = "etd15"
+database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
+
+start_date = str(sys.argv[1])
+end_date = str(sys.argv[2])
+risk_category = str(sys.argv[3])
+scale = str(sys.argv[4])
+aggregation = str(sys.argv[5])
+zone_name = str(sys.argv[6])
+comparaison = sys.argv[7].strip().lower() == "true"
+
+#print(f"Arguments reçus : {sys.argv}", file=sys.stderr)
+
+mois_en_lettres = {
+    1: 'Janv', 2: 'Févr', 3: 'Mars', 4: 'Avril', 5: 'Mai', 6: 'Juin',
+    7: 'Juil', 8: 'Août', 9: 'Sept', 10: 'Oct', 11: 'Nov', 12: 'Déc'
+}
+
 
 def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
    
@@ -57,22 +72,42 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
        
         WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'
         AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT >= '{date_debut}'
-        AND T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT <= '{date_fin}'
+        AND (T_DATEJOURE_DTJ.DTJ_DATE_FIN IS NULL OR T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}')
         {filtre_geo}
     """
     
     df_graphique = pd.read_sql(requete_sql, cnxn, coerce_float=False)
+    df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     return df_graphique, titre_zone, couleur_barre
-
-################################################# GRAPHIQUE EN VIOLON ###########################################################
 
 def violon(date_debut, date_fin, categorie_risque, echelle, agregation, nom_zone=None):
     df_graphique, titre_zone, couleur_barre = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
-    
+    print(f"Lignes renvoyées par la requête : {len(df_graphique)}", file=sys.stderr)
+
     titre = f'Densité des {categorie_risque} - {titre_zone}'
 
     nom_colonne = f'{categorie_risque}_{agregation}'
     df_graphique = df_graphique.rename(columns={'DNN_VALEUR': nom_colonne})
+    
+    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')   
+     
+    if df_graphique.empty:
+        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
+        
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
+                horizontalalignment='center', 
+                verticalalignment='center', 
+                fontsize=12, 
+                color='gray',
+                style='italic')
+        
+        ax.axis('off')
+        
+        
+        return df_graphique
 
     fig, ax = plt.subplots(figsize=(8, 6))
     data_propre = df_graphique[nom_colonne].dropna().values
@@ -85,11 +120,12 @@ def violon(date_debut, date_fin, categorie_risque, echelle, agregation, nom_zone
         ax.set_xticks([1])
         ax.set_xticklabels([nom_zone])
         plt.title(titre)
-        plt.savefig('graphique_violon.png', bbox_inches='tight')
+        plt.savefig(chemin_fichier) #, bbox_inches='tight'
         plt.show()
     plt.close()
         
     return df_graphique
+
 
 def violon_comparaison(valeurs):
     df_graphique = []
@@ -130,6 +166,5 @@ def violon_comparaison(valeurs):
         plt.show()
     plt.close()
 
-violon(19900101,20200201,'incendie','region')
-valeurs = [['19900101','20200201','incendie','region'],['19900101','20200201','incendie','departement','Gironde'],['19900101','20200201','incendie','commune','Pessac']]
-violon_comparaison(valeurs)
+if (comparaison == False) :
+    violon(start_date, end_date, risk_category, scale, aggregation, zone_name)

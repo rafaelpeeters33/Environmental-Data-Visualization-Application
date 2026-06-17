@@ -11,14 +11,12 @@ from math import sqrt
 import sys
 
 
-psw       = "ETD"
+psw       = "teap227q"
 server    = "info-mssql-etd"
-user      = "ETD"
+user      = "etd15"
 database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
-
-
 
 start_date = str(sys.argv[1])
 end_date = str(sys.argv[2])
@@ -27,7 +25,7 @@ scale = str(sys.argv[4])
 zone_name = str(sys.argv[5])
 comparaison = sys.argv[6].strip().lower() == "true"
 
-#print(f"Arguments reçus : {sys.argv}", file=sys.stderr)
+print(f"Arguments reçus : {sys.argv}", file=sys.stderr)
 
 
 def requete_sql(start_date, end_date, risk_category, scale, zone_name=None):
@@ -81,13 +79,30 @@ def boite_a_moustaches(start_date,end_date, risk_category, scale, zone_name=None
     df_graphique, titre_zone, couleur_barre, = requete_sql(start_date, end_date, risk_category, scale, zone_name)
     
     titre = f'Distribution des {risk_category} - {titre_zone} ({start_date} - {end_date})'
-
+    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
+    if df_graphique.empty:
+        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
+        
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
+                horizontalalignment='center', 
+                verticalalignment='center', 
+                fontsize=12, 
+                color='gray',
+                style='italic')
+        
+        ax.axis('off')
+        
+        plt.savefig(chemin_fichier, bbox_inches='tight')
+        plt.close()
+        
+        return df_graphique
 
     ax = df_graphique.plot(kind='box', column='DNN_VALEUR', by='NOM_ZONE', title=titre, legend=False, color=couleur_barre, rot=0, whis=(0, 100))
-    # ax = df_graphique.plot(kind='box', column='DNN_VALEUR', by='NOM_ZONE' , title=titre, legend=False, color=couleur_barre, rot=0)
    
 
-    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
+    
 
     plt.savefig(chemin_fichier)
     plt.close()

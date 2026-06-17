@@ -7,19 +7,19 @@ import sys
 import pymssql 
 from IPython.display import display
 
-psw      = "ETD"
-server   = "info-mssql-etd"
-user     = "ETD"
+psw       = "teap227q"
+server    = "info-mssql-etd"
+user      = "etd15"
 database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
 
-date_debut = '20240101' #int(sys.argv[1])
-date_fin = '20260101'#int(sys.argv[2])
-categorie_risque = 'INCENDIE' #str(sys.argv[3])
-echelle = 'departement' #str(sys.argv[4])
-agregation = 'avg' #str(sys.argv[5])
-nom_zone = 'Landes'#str(sys.argv[6])
+date_debut = int(sys.argv[1])
+date_fin = int(sys.argv[2])
+categorie_risque = str(sys.argv[3])
+echelle = str(sys.argv[4])
+agregation = str(sys.argv[5])
+nom_zone = str(sys.argv[6])
 
 
     

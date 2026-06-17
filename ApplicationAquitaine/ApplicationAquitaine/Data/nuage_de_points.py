@@ -8,15 +8,26 @@ from IPython.display import display
 import numpy.typing as npt
 import numpy as np
 from math import sqrt
+import sys
 
-################################################# CONNEXION ET REQUETE ###########################################################
-
-psw       = "ETD"
+psw       = "teap227q"
 server    = "info-mssql-etd"
-user      = "ETD"
-database = "MLR12345"
+user      = "etd15"
+database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
+
+start_date = str(sys.argv[1])
+end_date = str(sys.argv[2])
+risk_category = str(sys.argv[3])
+scale = str(sys.argv[4])
+zone_name = str(sys.argv[5])
+comparaison = sys.argv[6].strip().lower() == "true"
+
+mois_en_lettres = {
+    1: 'Janv', 2: 'Févr', 3: 'Mars', 4: 'Avril', 5: 'Mai', 6: 'Juin',
+    7: 'Juil', 8: 'Août', 9: 'Sept', 10: 'Oct', 11: 'Nov', 12: 'Déc'
+}
 
 def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
    
@@ -57,11 +68,13 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
        
         WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'
         AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT >= '{date_debut}'
-        AND T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT <= '{date_fin}'
+        AND (T_DATEJOURE_DTJ.DTJ_DATE_FIN IS NULL OR T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}')
         {filtre_geo}
     """
     
     df_graphique = pd.read_sql(requete_sql, cnxn, coerce_float=False)
+    df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     return df_graphique, titre_zone, couleur_barre
 
 ################################################# GRAPHIQUES NUAGES DE POINTS ###########################################################
@@ -69,32 +82,86 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
 def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
    
     df_graphique, titre_zone, couleur_barre, = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
+    print(f"Lignes renvoyées par la requête : {len(df_graphique)}", file=sys.stderr)
+
 
     df_graphique['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphique['DTJ_DATE_DEBUT'])
     df_graphique['DTJ_DATE_FIN'] = pd.to_datetime(df_graphique['DTJ_DATE_FIN'])
 
-    dateDebut = pd.to_datetime(date_debut, format='%Y%m%d')
-    dateFin = pd.to_datetime(date_fin, format='%Y%m%d')
-    periode= (dateFin-dateDebut).days
+    df_graphique['PERIODE'] = (
+        df_graphique['DTJ_DATE_DEBUT'].dt.month
+        + (df_graphique['DTJ_DATE_DEBUT'].dt.day - 1) / df_graphique['DTJ_DATE_DEBUT'].dt.days_in_month
+    )
    
     if df_graphique.empty:
-        print(f"Aucune donnée trouvée pour {titre_zone}.")
-        return None
+        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
+        
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
+                horizontalalignment='center', 
+                verticalalignment='center', 
+                fontsize=12, 
+                color='gray',
+                style='italic')
+        
+        ax.axis('off')
+        
+        plt.savefig(chemin_fichier, bbox_inches='tight')
+        plt.close()
+        
+        return df_graphique
     
-    if periode>365:
-        df_graphique['PERIODE']=df_graphique['DTJ_DATE_DEBUT'].dt.year
-    elif periode<=365:
-        df_graphique['PERIODE']=df_graphique['DTJ_DATE_DEBUT'].dt.month
 
+   
     titre = f'Evolution des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
      
+    if df_graphique.empty:
+        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
+        
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
+                horizontalalignment='center', 
+                verticalalignment='center', 
+                fontsize=12, 
+                color='gray',
+                style='italic')
+        
+        ax.axis('off')
+        
+        plt.savefig(chemin_fichier, bbox_inches='tight')
+        plt.close()
+        
+        return df_graphique
+
     # PLOT ET SAVE
     ax = df_graphique.plot(kind='scatter', x='PERIODE', y='DNN_VALEUR', title=titre, legend=False, color=couleur_barre, rot=0)
-    nom_fichier = 'graphique.png'
-   
-    plt.savefig(nom_fichier, bbox_inches='tight')
+
+    requete_unite = f""" SELECT distinct T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
+        from T_DONNEES_DNN
+        join possède on possède.DNN_ID = T_DONNEES_DNN.DNN_ID
+        join T_CATEGORIE_CTG on possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
+
+    df_unite = pd.read_sql(requete_unite, cnxn)
+
+    nom_donnee = df_unite['DNN_NOM'].iloc[0].strip()
+    unite_donnee = df_unite['DNN_UNITE'].iloc[0].strip()
+
+    ax.set_ylabel(nom_donnee + " en " + unite_donnee)
+
+    mois_presents = sorted(df_graphique['DTJ_DATE_DEBUT'].dt.month.unique())
+    ax.set_xticks(mois_presents)
+
+    labels_mois = [mois_en_lettres[m] for m in mois_presents]
+    ax.set_xticklabels(labels_mois, rotation=0)
+
+    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
+
+    plt.savefig(chemin_fichier)
     plt.close()
-    
+
     return df_graphique
 
 def nuage_de_points_comparaison(valeurs):
@@ -111,3 +178,6 @@ def nuage_de_points_comparaison(valeurs):
     nom_fichier = 'graphique.png'
     plt.savefig(nom_fichier, bbox_inches='tight')
     plt.close()
+
+if (comparaison == False) :
+    nuage_de_points(start_date, end_date, risk_category, scale, zone_name)
