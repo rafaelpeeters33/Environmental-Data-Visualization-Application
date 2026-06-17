@@ -1,0 +1,45 @@
+from pandas.plotting import parallel_coordinates
+import matplotlib.pyplot as plt
+import pandas as pd
+import sqlalchemy as sa
+import os
+import geopandas as gpd
+import pymssql
+from IPython.display import display
+import numpy.typing as npt
+import numpy as np
+from math import sqrt
+from requete import connexion
+from requete import requete_sql
+
+def trace_coordonnees_paralleles(date_debut, date_fin, echelle, nom_zone=None):
+    # 1. Récupération
+    df_incendie, titre_zone, _ = requete_sql(date_debut, date_fin, 'incendie', echelle, nom_zone)
+    df_inondation, _, _ = requete_sql(date_debut, date_fin, 'incendie', echelle, nom_zone)
+
+    # 2. Nettoyage dates
+    for df in [df_incendie, df_inondation]:
+        df['DTJ_DATE_DEBUT'] = pd.to_datetime(df['DTJ_DATE_DEBUT'])
+        df['ANNEE'] = df['DTJ_DATE_DEBUT'].dt.year.astype(str)
+
+    # 3. Agrégation forcée (on garde ANNEE en colonne)
+    df_inc_agg = df_incendie.groupby('ANNEE')['DNN_VALEUR'].sum().reset_index()
+    df_ino_agg = df_inondation.groupby('ANNEE')['DNN_VALEUR'].sum().reset_index()
+
+    # 4. Fusion
+    df_final = pd.merge(df_inc_agg, df_ino_agg, on='ANNEE', how='outer').fillna(0)
+    df_final.columns = ['ANNEE', 'Incendies', 'Inondations']
+
+    # 5. DESSIN (La correction est ici)
+    plt.figure(figsize=(10, 6))
+    
+    # On vérifie que 'ANNEE' est bien une colonne et pas l'index
+    # On force le tracé
+    parallel_coordinates(df_final, class_column='ANNEE', colormap='viridis')
+    
+    plt.title(f'Profil des risques par année - {titre_zone}')
+    plt.show()
+    plt.close()
+
+# TESTEZ AVEC CELA :
+trace_coordonnees_paralleles('19900101', '20200201', 'region')
