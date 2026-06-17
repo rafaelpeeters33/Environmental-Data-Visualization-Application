@@ -86,17 +86,19 @@ def boite_a_moustaches(start_date,end_date, risk_category, scale, zone_name=None
     ax = df_graphique.plot(kind='box', column='DNN_VALEUR', by='NOM_ZONE', title=titre, legend=False, color=couleur_barre, rot=0, whis=(0, 100))
     # ax = df_graphique.plot(kind='box', column='DNN_VALEUR', by='NOM_ZONE' , title=titre, legend=False, color=couleur_barre, rot=0)
    
+
     chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
 
     plt.savefig(chemin_fichier)
     plt.close()
+
 
     return df_graphique
 
 def boite_a_moustache_comparaison(valeurs):
     df_graphique = []
     for i in valeurs:
-        df_graphique.append(boite_a_moustaches(i[0],i[1],i[2],i[3],i[4]))
+        df_graphique.append(boite_a_moustaches(*i))
     df_final = df_graphique[0]
     for df_suivant in df_graphique[1:]:
         df_final = pd.merge(df_final, df_suivant, on='NOM_ZONE', how='outer')
@@ -112,7 +114,7 @@ def boite_a_moustache_comparaison(valeurs):
             liste_couleurs.append('#1E88E5') 
         else:
             liste_couleurs.append('#F57C00')
-                    """
+    """
     titre = f'Comparaison de données'
 
     #PLOT ET SAVE
@@ -125,3 +127,4 @@ def boite_a_moustache_comparaison(valeurs):
 
 if (comparaison == False) :
     boite_a_moustaches(start_date, end_date, risk_category, scale, zone_name)
+
