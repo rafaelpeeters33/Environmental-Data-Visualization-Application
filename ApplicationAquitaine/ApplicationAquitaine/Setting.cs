@@ -211,10 +211,10 @@ namespace ApplicationAquitaine
             
             python.Start();
             string erreurs = python.StandardError.ReadToEnd();
-            string info = python.StandardOutput.ReadToEnd();
+            //string info = python.StandardOutput.ReadToEnd();
+
             python.WaitForExit();
 
-            MessageBox.Show(info);
 
             if (python.ExitCode != 0)
             {
