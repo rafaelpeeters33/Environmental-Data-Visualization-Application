@@ -1,14 +1,9 @@
 import sqlalchemy as sa
 import pandas as pd
 import os 
+from requete import connexion
 
-psw      = "ETD"
-server   = "info-mssql-etd"
-user     = "ETD"
-database = "BD_E15_VISU"
-engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
-cnxn = engine.connect()
-
+cnxn = connexion()
 
 requete = "SELECT DPT_NOM FROM T_DEPARTEMENT_DPT"
 df = pd.read_sql(requete, cnxn)
