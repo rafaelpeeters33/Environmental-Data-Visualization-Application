@@ -3,8 +3,6 @@ import pandas as pd
 import sqlalchemy as sa
 import os
 import geopandas as gpd
-import pymssql
-from IPython.display import display
 import numpy.typing as npt
 import numpy as np
 from math import sqrt
