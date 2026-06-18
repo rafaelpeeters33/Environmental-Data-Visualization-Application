@@ -24,6 +24,7 @@ scale = str(sys.argv[4])
 aggregation = str(sys.argv[5])
 zone_name = str(sys.argv[6])
 comparaison = sys.argv[7].strip().lower() == "true"
+chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
 
 #print(f"Arguments reçus : {sys.argv}", file=sys.stderr)
 
@@ -85,45 +86,43 @@ def violon(date_debut, date_fin, categorie_risque, echelle, agregation, nom_zone
     df_graphique, titre_zone, couleur_barre = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
     print(f"Lignes renvoyées par la requête : {len(df_graphique)}", file=sys.stderr)
 
-    titre = f'Densité des {categorie_risque} - {titre_zone}'
+    if df_graphique.empty:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période",
+                horizontalalignment='center', verticalalignment='center',
+                fontsize=12, color='gray', style='italic')
+        ax.axis('off')
+        plt.savefig(chemin_fichier, bbox_inches='tight')
+        plt.close()
+        return df_graphique
 
     nom_colonne = f'{categorie_risque}_{agregation}'
     df_graphique = df_graphique.rename(columns={'DNN_VALEUR': nom_colonne})
-    
-    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')   
-     
-    if df_graphique.empty:
-        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
-        
-        fig, ax = plt.subplots(figsize=(6, 4))
-        
-        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
-                horizontalalignment='center', 
-                verticalalignment='center', 
-                fontsize=12, 
-                color='gray',
-                style='italic')
-        
-        ax.axis('off')
-        
-        
-        return df_graphique
+    df_graphique['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphique['DTJ_DATE_DEBUT'])
+    df_graphique['mois'] = df_graphique['DTJ_DATE_DEBUT'].dt.month
+
+    seuil_minimum = 5  # en dessous, une densité estimée n'a pas vraiment de sens
+    mois_valides, donnees_par_mois = [], []
+    for m in sorted(df_graphique['mois'].unique()):
+        valeurs = df_graphique.loc[df_graphique['mois'] == m, nom_colonne].dropna().values
+        if len(valeurs) >= seuil_minimum:
+            mois_valides.append(m)
+            donnees_par_mois.append(valeurs)
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    data_propre = df_graphique[nom_colonne].dropna().values
-    
-    if len(data_propre) > 0:
-        vp = ax.violinplot(data_propre, showmeans=True, showextrema=True)
+
+    if donnees_par_mois:
+        vp = ax.violinplot(donnees_par_mois, positions=range(1, len(mois_valides) + 1),
+                            showmeans=True, showmedians=True, showextrema=True)
         for corps in vp['bodies']:
             corps.set_facecolor(couleur_barre)
             corps.set_alpha(0.6)
-        ax.set_xticks([1])
-        ax.set_xticklabels([nom_zone])
-        plt.title(titre)
-        plt.savefig(chemin_fichier) #, bbox_inches='tight'
-        plt.show()
+        ax.set_xticks(range(1, len(mois_valides) + 1))
+        ax.set_xticklabels([mois_en_lettres[m] for m in mois_valides])
+        plt.title(f'Densité des {categorie_risque} par mois - {titre_zone} ({date_debut} - {date_fin})')
+        plt.savefig(chemin_fichier, bbox_inches='tight')
+
     plt.close()
-        
     return df_graphique
 
 

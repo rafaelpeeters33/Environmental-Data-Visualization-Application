@@ -26,6 +26,8 @@ scale = str(sys.argv[4])
 aggregation = str(sys.argv[5])
 zone_name = str(sys.argv[6])
 comparaison = sys.argv[7].strip().lower() == "true"
+chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
+
 
 mois_en_lettres = {
     1: 'Janv', 2: 'Févr', 3: 'Mars', 4: 'Avril', 5: 'Mai', 6: 'Juin',
@@ -122,7 +124,6 @@ def traceAnalyse(x:npt.NDArray[np.float64],y:npt.NDArray[np.float64]):
 
 
 def regression_lineaire(date_debut, date_fin, cat_x, cat_y, echelle, agregation, nom_zone=None):
-    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
 
     df_x, titre_zone, _ = requete_sql(date_debut, date_fin, cat_x, echelle, nom_zone)
     df_y, _, _ = requete_sql(date_debut, date_fin, cat_y, echelle, nom_zone)

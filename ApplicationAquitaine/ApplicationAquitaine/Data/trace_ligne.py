@@ -25,7 +25,7 @@ scale = str(sys.argv[4])
 aggregation = str(sys.argv[5])
 zone_name = str(sys.argv[6])
 comparaison = sys.argv[7].strip().lower() == "true"
-
+chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
 
 mois_en_lettres = {
     1: 'Janv', 2: 'Févr', 3: 'Mars', 4: 'Avril', 5: 'Mai', 6: 'Juin',
@@ -162,8 +162,6 @@ def trace_ligne(date_debut, date_fin,categorie_risque, echelle, agregation, nom_
 
     labels_mois = [mois_en_lettres[m] for m in mois_presents]
     ax.set_xticklabels(labels_mois, rotation=0)
-
-    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
 
     plt.savefig(chemin_fichier)
     plt.close()

@@ -26,7 +26,7 @@ scale = str(sys.argv[4])
 aggregation = str(sys.argv[5])
 zone_name = str(sys.argv[6])
 comparaison = sys.argv[7].strip().lower() == "true"
-
+chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
 
 def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
    
@@ -75,10 +75,9 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     return df_graphique, titre_zone, couleur_barre
 
-################################################# GRAPHIQUES BARRES ###########################################################
 
 def diagramme_barres(date_debut, date_fin, categorie_risque, echelle, agregation, nom_zone=None):
-   
+    
     df_graphique, titre_zone, couleur_barre, = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
 
     # AGREGATIONS
@@ -121,10 +120,10 @@ def diagramme_barres(date_debut, date_fin, categorie_risque, echelle, agregation
         return df_graphique
 
 
-    #PLOT ET SAVE
+
     ax = df_final.plot(kind='bar', x='NOM_ZONE', y=nom_colonne, title=titre,legend=False, color=couleur_barre, rot=0)
     
-    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
+    
 
     plt.savefig(chemin_fichier)
     plt.show()
@@ -157,7 +156,9 @@ def diagramme_barres_comparaison(valeurs):
     #PLOT ET SAVE
     ax = df_final.plot(kind='bar', x='NOM_ZONE',title=titre,color=liste_couleurs, legend=False, rot=0)
 
-    plt.savefig('graphique_comparaison_aires.png', bbox_inches='tight')
+    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
+
+    plt.savefig(chemin_fichier)
     plt.show()
     plt.close()
 

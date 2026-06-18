@@ -24,6 +24,8 @@ risk_category = str(sys.argv[3])
 scale = str(sys.argv[4])
 zone_name = str(sys.argv[5])
 comparaison = sys.argv[6].strip().lower() == "true"
+chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
+
 
 print(f"Arguments reçus : {sys.argv}", file=sys.stderr)
 
@@ -79,7 +81,6 @@ def boite_a_moustaches(start_date,end_date, risk_category, scale, zone_name=None
     df_graphique, titre_zone, couleur_barre, = requete_sql(start_date, end_date, risk_category, scale, zone_name)
     
     titre = f'Distribution des {risk_category} - {titre_zone} ({start_date} - {end_date})'
-    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
     if df_graphique.empty:
         print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
         

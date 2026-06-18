@@ -120,7 +120,7 @@ namespace ApplicationAquitaine
                 MessageBox.Show("Vous devez choisir une donnée à afficher");
                 return;
             }
-            if ((theGraphique == "ligne" || theGraphique == "Air empilée") && agregation == null )
+            if ((theGraphique == "ligne" || theGraphique == "Air empilée" ||theGraphique == "violon") && agregation == null )
             {
                 MessageBox.Show("Vous devez choisir une agrégation si vous voulez afficher ce graphique");
                 return;
@@ -210,7 +210,54 @@ namespace ApplicationAquitaine
 
         private void Barre_Graphique_Create()
         {
+            if (theDep == null)
+            {
+                echelle = "region";
+                nom_zone = "";
+            }
 
+            else if (theCom == null)
+            {
+                echelle = "departement";
+                nom_zone = theDep;
+            }
+            else
+            {
+                echelle = "commune";
+                nom_zone = theCom;
+            }
+
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "python",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+
+
+            startInfo.ArgumentList.Add(dataPath + "diagramme_barres.py");
+            startInfo.ArgumentList.Add(theStart.ToString());
+            startInfo.ArgumentList.Add(theEnd.ToString());
+            startInfo.ArgumentList.Add(theData);
+            startInfo.ArgumentList.Add(echelle);
+            startInfo.ArgumentList.Add(agregation);
+            startInfo.ArgumentList.Add(nom_zone);
+            startInfo.ArgumentList.Add("false");
+
+            Process python = new Process { StartInfo = startInfo };
+            python.Start();
+            string erreurs = python.StandardError.ReadToEnd();
+            python.WaitForExit();
+
+            if (python.ExitCode != 0)
+            {
+                MessageBox.Show("Erreur Python : " + erreurs);
+                return;
+            }
+
+            DisplayResult(dataPath + "setting.png");
         }
 
              
