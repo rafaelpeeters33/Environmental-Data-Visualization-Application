@@ -4,10 +4,10 @@ import sqlalchemy as sa
 import pymssql
 
 def connexion():
-    psw       = "ETD"
+    psw       = "teap227q"
     server    = "info-mssql-etd"
-    user      = "ETD"
-    database = "MLR12345"
+    user      = "etd15"
+    database = "BD_E15_VISU"
     engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
     cnxn = engine.connect()
     return cnxn
@@ -29,7 +29,7 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
         titre_zone = nom_zone
 
     # COULEUR
-    if categorie_risque == 'incendie':
+    if categorie_risque == 'INCENDIE':
         couleur_barre = '#FF0000'
     elif categorie_risque == 'inondation':
         couleur_barre = '#1E88E5'
@@ -38,7 +38,7 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
 
     # REQUETE
     requete_sql = f"""
-        SELECT {colonne_cible} AS NOM_ZONE, DNN_VALEUR, DTJ_DATE_DEBUT, DTJ_DATE_FIN
+        SELECT {colonne_cible} AS NOM_ZONE, DNN_VALEUR, DTJ_DATE_DEBUT, DTJ_DATE_FIN, DNN_UNITE
        
         FROM T_DONNEES_DNN
         JOIN situé ON T_DONNEES_DNN.DNN_ID = situé.DNN_ID
@@ -51,7 +51,7 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
        
         WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'
         AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT >= '{date_debut}'
-        AND T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}'
+        AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT <= '{date_fin}'
         {filtre_geo}
     """
     

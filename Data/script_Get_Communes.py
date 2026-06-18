@@ -11,7 +11,7 @@ requete = f"""
         SELECT T_COMMUNE_CMN.CMN_NOM 
         FROM T_COMMUNE_CMN
         JOIN T_DEPARTEMENT_DPT ON T_COMMUNE_CMN.DPT_ID = T_DEPARTEMENT_DPT.DPT_ID
-        WHERE T_DEPARTEMENT_DPT.DPT_NOM = '{nom_dpt}'
+        WHERE T_DEPARTEMEN T_DPT.DPT_NOM = '{nom_dpt}'
     """
 df = pd.read_sql(requete, cnxn)
 

@@ -43,7 +43,7 @@ def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=No
 def nuage_de_points_comparaison(valeurs):
     df_graphique = []
     for i in valeurs:
-        df_graphique.append(nuage_de_points(i[0],i[1],i[2],i[3],i[4],i[5]))
+        df_graphique.append(nuage_de_points(*i))
     df_final = df_graphique[0]
     for df_suivant in df_graphique[1:]:
         df_final = pd.merge(df_final, df_suivant, on='NOM_ZONE', how='outer')
@@ -54,3 +54,5 @@ def nuage_de_points_comparaison(valeurs):
     nom_fichier = 'graphique.png'
     plt.savefig(nom_fichier, bbox_inches='tight')
     plt.close()
+
+nuage_de_points(20250101,20250201,'INCENDIE','region')

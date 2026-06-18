@@ -50,59 +50,44 @@ def traceAnalyse(x:npt.NDArray[np.float64],y:npt.NDArray[np.float64]):
     print("Coefficient de corrélation linéaire:",R)
 
 
-def regression_lineaire(date_debut, date_fin, cat_x, cat_y, echelle, agregation, nom_zone=None):
+def regression_lineaire(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     
-    df_x, titre_zone, _ = requete_sql(date_debut, date_fin, cat_x, echelle, nom_zone)
-    df_y, _, _ = requete_sql(date_debut, date_fin, cat_y, echelle, nom_zone)
+    df, titre_zone, couleur_barre = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
 
-    df_x['DTJ_DATE_DEBUT'] = pd.to_datetime(df_x['DTJ_DATE_DEBUT'])
-    df_y['DTJ_DATE_DEBUT'] = pd.to_datetime(df_y['DTJ_DATE_DEBUT'])
+    df['DNN_VALEUR'] = pd.to_numeric(df['DNN_VALEUR'], errors='coerce')
+    df['DTJ_DATE_DEBUT'] = pd.to_datetime(df['DTJ_DATE_DEBUT'])
 
     dateDebut = pd.to_datetime(date_debut, format='%Y%m%d')
-    dateFin = pd.to_datetime(date_fin, format='%Y%m%d')
+    dateFin   = pd.to_datetime(date_fin,   format='%Y%m%d')
     periode = (dateFin - dateDebut).days
 
-    if periode > 365:
-        df_x['PERIODE'] = df_x['DTJ_DATE_DEBUT'].dt.year
-        df_y['PERIODE'] = df_y['DTJ_DATE_DEBUT'].dt.year
+    if periode > 365 :
+        df['PERIODE'] = df['DTJ_DATE_DEBUT'].dt.year
     else:
-        df_x['PERIODE'] = df_x['DTJ_DATE_DEBUT'].dt.month
-        df_y['PERIODE'] = df_y['DTJ_DATE_DEBUT'].dt.month
+        df['PERIODE'] = df['DTJ_DATE_DEBUT'].dt.month
 
+    df_final = df.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
+    df_final = df_final.dropna()
 
-    if agregation == 'sum':
-        df_x_agg = df_x.groupby('PERIODE')['DNN_VALEUR'].sum().reset_index()
-        df_y_agg = df_y.groupby('PERIODE')['DNN_VALEUR'].sum().reset_index()
-    elif agregation == 'count':
-        df_x_agg = df_x.groupby('PERIODE')['DNN_VALEUR'].count().reset_index()
-        df_y_agg = df_y.groupby('PERIODE')['DNN_VALEUR'].count().reset_index()
-    else: 
-        df_x_agg = df_x.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
-        df_y_agg = df_y.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
-
-
-    df_merge = pd.merge(df_x_agg, df_y_agg, on='PERIODE', suffixes=('_X', '_Y')).fillna(0)
-
- 
-    x_vals = df_merge['DNN_VALEUR_X'].values.astype(float)
-    y_vals = df_merge['DNN_VALEUR_Y'].values.astype(float)
-
-  
+    x = df_final['PERIODE'].values.astype(float)
+    y = df_final['DNN_VALEUR'].values.astype(float)
     
-    plt.figure(figsize=(8, 6))
-    plt.xlabel(f"{agregation} de {cat_x}")
-    plt.ylabel(f"{agregation} de {cat_y}")
-    plt.title(f"\n--- Régression : {cat_x} (X) vs {cat_y} (Y) sur {titre_zone} ---")
+    a, b, r = regression(x, y)
+    x_line = np.linspace(x.min(), x.max(), 100)
+    y_line = a * x_line + b
 
-
-    traceAnalyse(x_vals, y_vals)
+    plt.figure(figsize=(10, 5))
     
-    
-    return df_merge
+    plt.plot(x_line, y_line, color=couleur_barre)
+    plt.scatter(x, y)
+    plt.xlabel('Années')
+    plt.ylabel(f'{categorie_risque} en °C')
+    plt.title(f'Régression linéaire – {categorie_risque} – {titre_zone} ({date_debut}–{date_fin})')
 
+    plt.savefig('graphique.png', bbox_inches ='tight')
+    plt.show()
 
-regression_lineaire('19900101', '20200201', 'incendie', 'incendie', 'region', 'avg')
+    return df_final
 
-regression_lineaire('19900101', '20200201', 'incendie', 'incendie', 'region', 'count')
-
-regression_lineaire('19900101', '20200201', 'incendie', 'incendie', 'region', 'sum')
+regression_lineaire('19500101', '20251231', 'PRECIPITATION', 'region')
+regression_lineaire('19500101', '20251231', 'TEMP_MOY', 'region')

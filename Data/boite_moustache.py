@@ -13,6 +13,7 @@ from requete import requete_sql
 
 def boite_a_moustaches(date_debut,date_fin, categorie_risque, echelle, nom_zone=None):
     df_graphique, titre_zone, couleur_barre, = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
+    df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     
     titre = f'Distribution des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
 
@@ -54,6 +55,4 @@ def boite_a_moustache_comparaison(valeurs):
     plt.savefig(nom_fichier, bbox_inches='tight')
     plt.show()
 
-boite_a_moustaches(19900101,20200201,'incendie','region')
-valeurs = [['19900101','20200201','incendie','region'],['19900101','20200201','incendie','departement','Gironde'],['19900101','20200201','incendie','commune','Pessac']]
-boite_a_moustache_comparaison(valeurs)
+boite_a_moustaches(20250101,20250201,'INCENDIE','region')
