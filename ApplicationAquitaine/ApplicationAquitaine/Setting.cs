@@ -20,7 +20,7 @@ namespace ApplicationAquitaine
         private string theDep;
         private string theCom;
         private string theEnd;
-        private string theStart;
+        public string theStart;
         private string theGraphique;
         private string echelle;
         private string agregation;
@@ -43,7 +43,6 @@ namespace ApplicationAquitaine
             comboBoxTypeGraph.Items.Add("boite a moustaches");
             comboBoxTypeGraph.Items.Add("ligne");
             comboBoxTypeGraph.Items.Add("Air empilée");
-            comboBoxTypeGraph.Items.Add("barre");
             comboBoxTypeGraph.Items.Add("nuage de points");
             comboBoxTypeGraph.Items.Add("regression linéaire");
             comboBoxTypeGraph.Items.Add("violon");
@@ -52,6 +51,8 @@ namespace ApplicationAquitaine
             comboBoxAgregation.Items.Add("avg");
             comboBoxAgregation.Items.Add("sum");
             comboBoxAgregation.Items.Add("count");
+
+            comboBoxAgregation.Enabled = false;
 
             pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
 
@@ -95,7 +96,7 @@ namespace ApplicationAquitaine
 
         private void buttonCompare_Click(object sender, EventArgs e)
         {
-            Compare compareForm = new Compare();
+            Compare compareForm = new Compare(theStart, theEnd);
             compareForm.Show();
             this.Hide();
         }
@@ -110,6 +111,8 @@ namespace ApplicationAquitaine
 
         private void buttonValidate_Click(object sender, EventArgs e)
         {
+
+
             if (theGraphique == null)
             {
                 MessageBox.Show("Vous devez choisir un type de graphe à afficher");
@@ -120,43 +123,18 @@ namespace ApplicationAquitaine
                 MessageBox.Show("Vous devez choisir une donnée à afficher");
                 return;
             }
-            if ((theGraphique == "ligne" || theGraphique == "Air empilée" ||theGraphique == "violon") && agregation == null )
+            if ((theGraphique == "ligne" || theGraphique == "Air empilée" || theGraphique == "violon") && agregation == null)
             {
                 MessageBox.Show("Vous devez choisir une agrégation si vous voulez afficher ce graphique");
                 return;
             }
 
-            if (theGraphique == "boite a moustaches")
-            {
-                boite_A_Moustache_Create();
-            }
-            else if (theGraphique == "ligne")
-            {
-                ligne_Graphique_Create();
-            }
-            else if (theGraphique == "Air empilée")
-            {
-                Air_Empilee_Graphique_Create();
-            }
-            else if (theGraphique == "barre")
-            {
-                Barre_Graphique_Create();
-            }
-            else if (theGraphique == "nuage de points")
-            {
-                Nuage_De_Points_Graphique_Create();
-            }
-            else if (theGraphique == "regression linéaire")
-            {
-                Regression_Lineaire_Graphique_Create();
-            }
-            else if (theGraphique == "violon")
-            {
-                Violon_Graphique_Create();
-            }
+            Graphique_Create(theGraphique);
+
+
         }
 
-        private void Air_Empilee_Graphique_Create()
+        private void Graphique_Create(string graphique)
         {
             if (theDep == null)
             {
@@ -184,13 +162,41 @@ namespace ApplicationAquitaine
                 RedirectStandardOutput = true
             };
 
+            switch (theGraphique)
+            {
+                case "boite a moustaches":
+                    startInfo.ArgumentList.Add(dataPath + "boite_moustache.py");
+                    break;
+                case "ligne":
+                    startInfo.ArgumentList.Add(dataPath + "trace_ligne.py");
+                    break;
+                case "Air empilée":
+                    startInfo.ArgumentList.Add(dataPath + "aire_empilee.py");
+                    break;
+                case "nuage de points":
+                    startInfo.ArgumentList.Add(dataPath + "nuage_de_points.py");
+                    break;
+                case "regression linéaire":
+                    startInfo.ArgumentList.Add(dataPath + "regression_lineaire.py");
+                    break;
+                case "violon":
+                    startInfo.ArgumentList.Add(dataPath + "violon.py");
+                    break;
+                default:
+                    break;
+            }
 
-            startInfo.ArgumentList.Add(dataPath + "aire_empilee.py");
+
             startInfo.ArgumentList.Add(theStart.ToString());
             startInfo.ArgumentList.Add(theEnd.ToString());
             startInfo.ArgumentList.Add(theData);
             startInfo.ArgumentList.Add(echelle);
-            startInfo.ArgumentList.Add(agregation);
+
+            if (theGraphique == "ligne" || theGraphique == "Air empilée" || theGraphique == "violon")
+            {
+                startInfo.ArgumentList.Add(agregation);
+            }
+
             startInfo.ArgumentList.Add(nom_zone);
             startInfo.ArgumentList.Add("false");
 
@@ -208,320 +214,6 @@ namespace ApplicationAquitaine
             DisplayResult(dataPath + "setting.png");
         }
 
-        private void Barre_Graphique_Create()
-        {
-            if (theDep == null)
-            {
-                echelle = "region";
-                nom_zone = "";
-            }
-
-            else if (theCom == null)
-            {
-                echelle = "departement";
-                nom_zone = theDep;
-            }
-            else
-            {
-                echelle = "commune";
-                nom_zone = theCom;
-            }
-
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "python",
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
-            };
-
-
-            startInfo.ArgumentList.Add(dataPath + "diagramme_barres.py");
-            startInfo.ArgumentList.Add(theStart.ToString());
-            startInfo.ArgumentList.Add(theEnd.ToString());
-            startInfo.ArgumentList.Add(theData);
-            startInfo.ArgumentList.Add(echelle);
-            startInfo.ArgumentList.Add(agregation);
-            startInfo.ArgumentList.Add(nom_zone);
-            startInfo.ArgumentList.Add("false");
-
-            Process python = new Process { StartInfo = startInfo };
-            python.Start();
-            string erreurs = python.StandardError.ReadToEnd();
-            python.WaitForExit();
-
-            if (python.ExitCode != 0)
-            {
-                MessageBox.Show("Erreur Python : " + erreurs);
-                return;
-            }
-
-            DisplayResult(dataPath + "setting.png");
-        }
-
-             
-        private void Nuage_De_Points_Graphique_Create()
-        {
-            if (theDep == null)
-            {
-                echelle = "region";
-                nom_zone = "";
-            }
-
-            else if (theCom == null)
-            {
-                echelle = "departement";
-                nom_zone = theDep;
-            }
-            else
-            {
-                echelle = "commune";
-                nom_zone = theCom;
-            }
-
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "python",
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
-            };
-
-
-            startInfo.ArgumentList.Add(dataPath + "nuage_de_points.py");
-            startInfo.ArgumentList.Add(theStart.ToString());
-            startInfo.ArgumentList.Add(theEnd.ToString());
-            startInfo.ArgumentList.Add(theData);
-            startInfo.ArgumentList.Add(echelle);
-            startInfo.ArgumentList.Add(nom_zone);
-            startInfo.ArgumentList.Add("false");
-
-            Process python = new Process { StartInfo = startInfo };
-            python.Start();
-            string erreurs = python.StandardError.ReadToEnd();
-            python.WaitForExit();
-
-            if (python.ExitCode != 0)
-            {
-                MessageBox.Show("Erreur Python : " + erreurs);
-                return;
-            }
-
-            DisplayResult(dataPath + "setting.png");
-        }
-
-
-        private void Regression_Lineaire_Graphique_Create()
-        {
-            if (theDep == null)
-            {
-                echelle = "region";
-                nom_zone = "";
-            }
-
-            else if (theCom == null)
-            {
-                echelle = "departement";
-                nom_zone = theDep;
-            }
-            else
-            {
-                echelle = "commune";
-                nom_zone = theCom;
-            }
-
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "python",
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
-            };
-
-
-            startInfo.ArgumentList.Add(dataPath + "regression_lineaire.py");
-            startInfo.ArgumentList.Add(theStart.ToString());
-            startInfo.ArgumentList.Add(theEnd.ToString());
-            startInfo.ArgumentList.Add(theData);
-            startInfo.ArgumentList.Add(echelle);
-            startInfo.ArgumentList.Add(agregation);
-            startInfo.ArgumentList.Add(nom_zone);
-            startInfo.ArgumentList.Add("false");
-
-            Process python = new Process { StartInfo = startInfo };
-            python.Start();
-            string erreurs = python.StandardError.ReadToEnd();
-            python.WaitForExit();
-
-            if (python.ExitCode != 0)
-            {
-                MessageBox.Show("Erreur Python : " + erreurs);
-                return;
-            }
-
-            DisplayResult(dataPath + "setting.png");
-        }
-
-
-        private void Violon_Graphique_Create()
-        {
-            if (theDep == null)
-            {
-                echelle = "region";
-                nom_zone = "";
-            }
-
-            else if (theCom == null)
-            {
-                echelle = "departement";
-                nom_zone = theDep;
-            }
-            else
-            {
-                echelle = "commune";
-                nom_zone = theCom;
-            }
-
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "python",
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
-            };
-
-
-            startInfo.ArgumentList.Add(dataPath + "violon.py");
-            startInfo.ArgumentList.Add(theStart.ToString());
-            startInfo.ArgumentList.Add(theEnd.ToString());
-            startInfo.ArgumentList.Add(theData);
-            startInfo.ArgumentList.Add(echelle);
-            startInfo.ArgumentList.Add(agregation);
-            startInfo.ArgumentList.Add(nom_zone);
-            startInfo.ArgumentList.Add("false");
-
-            Process python = new Process { StartInfo = startInfo };
-            python.Start();
-            string erreurs = python.StandardError.ReadToEnd();
-            python.WaitForExit();
-
-            if (python.ExitCode != 0)
-            {
-                MessageBox.Show("Erreur Python : " + erreurs);
-                return;
-            }
-
-            DisplayResult(dataPath + "setting.png");
-        }
-
-        private void ligne_Graphique_Create()
-        {
-
-            if (theDep == null)
-            {
-                echelle = "region";
-                nom_zone = "";
-            }
-
-            else if (theCom == null)
-            {
-                echelle = "departement";
-                nom_zone = theDep;
-            }
-            else
-            {
-                echelle = "commune";
-                nom_zone = theCom;
-            }
-
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "python",
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
-            };
-
-
-            startInfo.ArgumentList.Add(dataPath + "trace_ligne.py");
-            startInfo.ArgumentList.Add(theStart.ToString());
-            startInfo.ArgumentList.Add(theEnd.ToString());
-            startInfo.ArgumentList.Add(theData);
-            startInfo.ArgumentList.Add(echelle);
-            startInfo.ArgumentList.Add(agregation);
-            startInfo.ArgumentList.Add(nom_zone);
-            startInfo.ArgumentList.Add("false");
-
-            Process python = new Process { StartInfo = startInfo };
-            python.Start();
-            string erreurs = python.StandardError.ReadToEnd();
-            python.WaitForExit();
-
-            if (python.ExitCode != 0)
-            {
-                MessageBox.Show("Erreur Python : " + erreurs);
-                return;
-            }
-
-            DisplayResult(dataPath + "setting.png");
-        }
-
-
-        private void boite_A_Moustache_Create()
-        {
-            if (theDep == null)
-            {
-                echelle = "region";
-                nom_zone = "Aquitaine";
-            }
-            else if (theCom == null)
-            {
-                echelle = "departement";
-                nom_zone = theDep;
-            }
-            else
-            {
-                echelle = "commune";
-                nom_zone = theCom;
-            }
-
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "python",
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
-            };
-
-            startInfo.ArgumentList.Add(dataPath + "boite_moustache.py");
-            startInfo.ArgumentList.Add(theStart);
-            startInfo.ArgumentList.Add(theEnd);
-            startInfo.ArgumentList.Add(theData);
-            startInfo.ArgumentList.Add(echelle);
-            startInfo.ArgumentList.Add(nom_zone);
-            startInfo.ArgumentList.Add("false");
-
-            Process python = new Process { StartInfo = startInfo };
-            python.Start();
-
-            string erreurs = python.StandardError.ReadToEnd();
-            python.WaitForExit();
-
-            if (python.ExitCode != 0)
-            {
-                MessageBox.Show("Erreur Python : " + erreurs);
-                return;
-            }
-
-
-            DisplayResult(dataPath + "setting.png");
-        }
 
         private void DisplayResult(string fileNameImage)
         {
@@ -571,7 +263,6 @@ namespace ApplicationAquitaine
 
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.FileName = "python";
-            //Guillemets autour des chemins
             startInfo.Arguments = $"\"{scriptPath}\" \"{nomDpt}\" \"{dossierData}\"";
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
@@ -643,7 +334,6 @@ namespace ApplicationAquitaine
 
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.FileName = "python";
-            //  Guillemets autour des chemins pour gérer les espaces
             startInfo.Arguments = $"\"{scriptPath}\" \"{dossierData}\"";
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
@@ -687,7 +377,16 @@ namespace ApplicationAquitaine
 
         private void comboBoxTypeGraph_SelectedIndexChanged(object sender, EventArgs e)
         {
+
             theGraphique = comboBoxTypeGraph.Text;
+            if (theGraphique == "ligne" || theGraphique == "Air empilée" || theGraphique == "violon")
+            {
+                comboBoxAgregation.Enabled = true;
+            }
+            else
+            {
+                comboBoxAgregation.Enabled = false;
+            }
         }
 
         private void dateTimePickerStart_ValueChanged(object sender, EventArgs e)
@@ -703,6 +402,11 @@ namespace ApplicationAquitaine
         private void comboBoxAgregation_SelectedIndexChanged(object sender, EventArgs e)
         {
             agregation = comboBoxAgregation.Text;
+        }
+
+        private void pictureBox_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

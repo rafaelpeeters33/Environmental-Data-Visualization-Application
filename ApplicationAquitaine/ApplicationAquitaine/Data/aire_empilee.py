@@ -34,7 +34,7 @@ mois_en_lettres = {
 }
 
 def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
-   
+
     # ECHELLE
     if echelle == 'region':
         colonne_cible = "'Nouvelle-Aquitaine'"
@@ -49,7 +49,8 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
         filtre_geo = f"AND T_COMMUNE_CMN.CMN_NOM = '{nom_zone}'"
         titre_zone = nom_zone
 
-    # COULEUR
+
+    # COULEUR (utilisée seulement quand il n'y a qu'une seule série au final)
     if categorie_risque == 'incendie':
         couleur_barre = '#FF0000'
     elif categorie_risque == 'inondation':
@@ -60,7 +61,7 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     # REQUETE
     requete_sql = f"""
         SELECT {colonne_cible} AS NOM_ZONE, DNN_VALEUR, DTJ_DATE_DEBUT, DTJ_DATE_FIN
-       
+
         FROM T_DONNEES_DNN
         JOIN situé ON T_DONNEES_DNN.DNN_ID = situé.DNN_ID
         JOIN T_COMMUNE_CMN ON situé.CMN_ID = T_COMMUNE_CMN.CMN_ID
@@ -69,124 +70,140 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
         JOIN T_DATEJOURE_DTJ ON déroulé.ID_DTJ = T_DATEJOURE_DTJ.ID_DTJ
         JOIN possède ON T_DONNEES_DNN.DNN_ID = possède.DNN_ID
         JOIN T_CATEGORIE_CTG ON possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
-       
+
         WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'
         AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT >= '{date_debut}'
         AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT <= '{date_fin}'
         AND (T_DATEJOURE_DTJ.DTJ_DATE_FIN IS NULL OR T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}')
         {filtre_geo}
     """
-    
+
     df_graphique = pd.read_sql(requete_sql, cnxn, coerce_float=False)
     df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     return df_graphique, titre_zone, couleur_barre
 
 
-
-def trace_aires_empilees(date_debut, date_fin, categorie_risque, echelle, agregation, nom_zone=None):
+def construire_serie(date_debut, date_fin, categorie_risque, echelle, agregation, nom_zone=None):
     
-    df_graphique, titre_zone, couleur_barre = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
-    print(f"Lignes renvoyées par la requête : {len(df_graphique)}", file=sys.stderr)
-
-
-    df_graphique['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphique['DTJ_DATE_DEBUT'])
-    df_graphique['DTJ_DATE_FIN'] = pd.to_datetime(df_graphique['DTJ_DATE_FIN'])
-
-    df_graphique['PERIODE']=df_graphique['DTJ_DATE_DEBUT'].dt.month
-   
-       
-    if agregation == 'avg':
-        df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
-        titre = f'Aires empilées (Moyenne) : {categorie_risque}'
-
-        requete_unite = f""" SELECT distinct T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
-        from T_DONNEES_DNN
-        join possède on possède.DNN_ID = T_DONNEES_DNN.DNN_ID
-        join T_CATEGORIE_CTG on possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
-        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
-
-        df_unite = pd.read_sql(requete_unite, cnxn)
-
-        nom_donnee = df_unite['DNN_NOM'].iloc[0].strip()
-        unite_donnee = df_unite['DNN_UNITE'].iloc[0].strip()
-        y_label = nom_donnee + " en " + unite_donnee
-
-
-    elif agregation == 'sum':
-        df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].sum().reset_index()
-        titre = f'Aires empilées (Somme) : {categorie_risque}'
-
-        requete_unite = f""" SELECT distinct T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
-        from T_DONNEES_DNN
-        join possède on possède.DNN_ID = T_DONNEES_DNN.DNN_ID
-        join T_CATEGORIE_CTG on possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
-        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
-
-        df_unite = pd.read_sql(requete_unite, cnxn)
-
-        nom_donnee = df_unite['DNN_NOM'].iloc[0].strip()
-        unite_donnee = df_unite['DNN_UNITE'].iloc[0].strip()
-        y_label = nom_donnee + " en " + unite_donnee
-
-    else:
-        df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].count().reset_index()
-        titre = f'Aires empilées (Nombre) : {categorie_risque}'
-        y_label = "nombre d'incendie"
-
-
-    nom_colonne = f'{categorie_risque}_{agregation}'
-    df_final = df_final.rename(columns={'DNN_VALEUR': nom_colonne})
+    df_graphique, titre_zone, _ = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
 
     if df_graphique.empty:
-        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
+        return None, None, titre_zone
+
+    df_graphique['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphique['DTJ_DATE_DEBUT'])
+    
+    date_deb_dt = pd.to_datetime(date_debut)
+    date_fin_dt = pd.to_datetime(date_fin)
+    nb_jours = (date_fin_dt - date_deb_dt).days
+    month = False
+
+    if nb_jours < 31:
+        df_graphique['PERIODE'] = df_graphique['DTJ_DATE_DEBUT'].dt.strftime('%Y-%m-%d')
+    elif nb_jours > 365:
+        df_graphique['PERIODE'] = df_graphique['DTJ_DATE_DEBUT'].dt.year
+    else:
+        df_graphique['PERIODE'] = df_graphique['DTJ_DATE_DEBUT'].dt.strftime('%Y-%m')
         
+
+    if agregation == 'avg':
+        df_resultat = df_graphique.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
+    elif agregation == 'sum':
+        df_resultat = df_graphique.groupby('PERIODE')['DNN_VALEUR'].sum().reset_index()
+    else:
+        df_resultat = df_graphique.groupby('PERIODE')['DNN_VALEUR'].count().reset_index()
+        
+    if agregation == 'count':
+        unite = "nombre d'évènements"
+    else:
+        requete_unite = f"""SELECT DISTINCT T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
+            FROM T_DONNEES_DNN
+            JOIN possède ON possède.DNN_ID = T_DONNEES_DNN.DNN_ID
+            JOIN T_CATEGORIE_CTG ON possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+            WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
+        df_unite = pd.read_sql(requete_unite, cnxn)
+        unite = df_unite['DNN_UNITE'].iloc[0].strip() if not df_unite.empty else ""
+
+    nom_serie = f"{titre_zone} - {categorie_risque}"
+    df_resultat = df_resultat.rename(columns={'DNN_VALEUR': nom_serie})
+
+
+
+    return df_resultat, unite, titre_zone
+
+
+def trace_graphique(date_debut, date_fin, categories, echelle, agregation, zones=None):
+   
+    if echelle == 'region':
+        zones_a_parcourir = [None]
+    else:
+        zones_a_parcourir = zones if zones else [None]
+
+    series = []
+    unites = set()
+
+    for categorie in categories:
+        for zone in zones_a_parcourir:
+            df_mensuel, unite, _ = construire_serie(
+                date_debut, date_fin, categorie, echelle, agregation, zone
+            )
+            if df_mensuel is not None:
+                series.append(df_mensuel)
+                unites.add(unite)
+
+
+    if not series:
         fig, ax = plt.subplots(figsize=(6, 4))
-        
-        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
-                horizontalalignment='center', 
-                verticalalignment='center', 
-                fontsize=12, 
-                color='gray',
-                style='italic')
-        
+        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période",
+                horizontalalignment='center', verticalalignment='center',
+                fontsize=12, color='gray', style='italic')
         ax.axis('off')
-        
         plt.savefig(chemin_fichier, bbox_inches='tight')
         plt.close()
-        
-        return df_graphique
+        return pd.DataFrame()
 
-    ax = df_final.plot(kind='area', x='PERIODE', y=nom_colonne, title=titre, legend=True, color=couleur_barre, alpha=0.6, rot=0)
+    df_final = series[0]
+    for df_suivant in series[1:]:
+        df_final = pd.merge(df_final, df_suivant, on='PERIODE', how='outer')
 
+    df_final = df_final.sort_values(by='PERIODE').fillna(0)
+
+    colonnes_series= []
+    for c in df_final.columns:
+        if c != 'PERIODE':
+            colonnes_series.append(c)
+
+    
+    if len(colonnes_series) == 1 and len(unites) == 1:
+        y_label = list(unites)[0]
+        titre = colonnes_series[0]
+    else:
+        y_label = "Valeur"
+        titre = "Comparaison des évolutions (aires empilées)"
+
+    ax = df_final.plot(kind='area', x='PERIODE', y=colonnes_series, stacked=True,
+                        alpha=0.7, legend=True, rot=0, figsize=(10, 6), title=titre)
     ax.set_ylabel(y_label)
 
-    mois_presents = sorted(df_final['PERIODE'].unique())
-    ax.set_xticks(mois_presents)
+    
 
-    labels_mois = [mois_en_lettres[m] for m in mois_presents]
-    ax.set_xticklabels(labels_mois, rotation=0)
+    #if (month):
+    #    mois_presents = sorted(df_final['PERIODE'].unique())
+    #    ax.set_xticks(mois_presents)
 
-    plt.savefig(chemin_fichier)
+    #    labels_mois = [mois_en_lettres[m] for m in mois_presents]
+    #    ax.set_xticklabels(labels_mois, rotation=0)
+
+    
+
+    plt.savefig(chemin_fichier, bbox_inches='tight')
     plt.close()
 
     return df_final
 
-def trace_aires_empilees_comparaison(valeurs):
-    df_graphique = []
-    for i in valeurs:
-        df_graphique.append(trace_aires_empilees(i[0], i[1], i[2], i[3], i[4], i[5], afficher=False))
-    
-    df_final = df_graphique[0]
-    for df_suivant in df_graphique[1:]:
-        df_final = pd.merge(df_final, df_suivant, on='PERIODE', how='outer')
-    
-    df_final = df_final.sort_values(by='PERIODE')
-    
-    #couleurs = generer_liste_couleurs(df_final.columns)  color=couleurs,
-    
-    ax = df_final.plot(kind='area', x='PERIODE', stacked=True, alpha=0.7, legend=True, rot=0, figsize=(10, 6), title="Comparaison des Évolutions (Aires Empilées)")
-    plt.savefig('graphique_comparaison_aires.png', bbox_inches='tight')
-    plt.close()
 
-if (comparaison == False) :
-    trace_aires_empilees(start_date, end_date, risk_category, scale, aggregation, zone_name)
+
+
+categories = [c.strip() for c in risk_category.split('|') if c.strip()]
+zones = [z.strip() for z in zone_name.split('|') if z.strip()] if zone_name else []
+
+trace_graphique(start_date, end_date, categories, scale, aggregation, zones)

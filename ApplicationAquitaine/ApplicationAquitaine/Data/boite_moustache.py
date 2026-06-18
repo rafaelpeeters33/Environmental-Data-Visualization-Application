@@ -78,7 +78,7 @@ def requete_sql(start_date, end_date, risk_category, scale, zone_name=None):
 
 
 def boite_a_moustaches(start_date,end_date, risk_category, scale, zone_name=None):
-    df_graphique, titre_zone, couleur_barre, = requete_sql(start_date, end_date, risk_category, scale, zone_name)
+    df_graphique, titre_zone, couleur_barre = requete_sql(start_date, end_date, risk_category, scale, zone_name)
     
     titre = f'Distribution des {risk_category} - {titre_zone} ({start_date} - {end_date})'
     if df_graphique.empty:

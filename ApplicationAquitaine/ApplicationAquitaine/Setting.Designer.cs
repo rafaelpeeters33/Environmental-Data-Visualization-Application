@@ -283,6 +283,7 @@
             pictureBox.Size = new Size(650, 580);
             pictureBox.TabIndex = 81;
             pictureBox.TabStop = false;
+            pictureBox.Click += pictureBox_Click;
             // 
             // DataComboBox
             // 
