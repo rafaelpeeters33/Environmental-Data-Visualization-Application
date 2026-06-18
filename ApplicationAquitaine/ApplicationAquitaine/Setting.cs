@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.Intrinsics.Arm;
@@ -46,6 +47,8 @@ namespace ApplicationAquitaine
             comboBoxTypeGraph.Items.Add("nuage de points");
             comboBoxTypeGraph.Items.Add("regression linéaire");
             comboBoxTypeGraph.Items.Add("violon");
+            comboBoxTypeGraph.Items.Add("Histogramme");
+
 
             comboBoxAgregation.Items.Clear();
             comboBoxAgregation.Items.Add("avg");
@@ -182,6 +185,10 @@ namespace ApplicationAquitaine
                 case "violon":
                     startInfo.ArgumentList.Add(dataPath + "violon.py");
                     break;
+                case "Histogramme":
+                    startInfo.ArgumentList.Add(dataPath + "histogramme.py");
+                    break;
+
                 default:
                     break;
             }
@@ -201,9 +208,13 @@ namespace ApplicationAquitaine
             startInfo.ArgumentList.Add("false");
 
             Process python = new Process { StartInfo = startInfo };
+            
             python.Start();
             string erreurs = python.StandardError.ReadToEnd();
+            string info = python.StandardOutput.ReadToEnd();
             python.WaitForExit();
+
+            MessageBox.Show(info);
 
             if (python.ExitCode != 0)
             {
