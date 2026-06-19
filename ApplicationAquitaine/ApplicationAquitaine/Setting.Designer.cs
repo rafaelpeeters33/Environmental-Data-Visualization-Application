@@ -32,8 +32,6 @@
             buttonValidate = new Button();
             labelPeriod = new Label();
             buttonRollBack = new Button();
-            labelTitle = new Label();
-            labelLegend = new Label();
             buttonCompare = new Button();
             buttonDownload = new Button();
             buttonRegion = new Button();
@@ -105,30 +103,6 @@
             buttonRollBack.UseVisualStyleBackColor = false;
             buttonRollBack.Click += buttonRollBack_Click;
             // 
-            // labelTitle
-            // 
-            labelTitle.AutoSize = true;
-            labelTitle.BackColor = Color.FromArgb(169, 24, 50);
-            labelTitle.Font = new Font("Segoe UI", 26.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            labelTitle.ForeColor = SystemColors.ControlLightLight;
-            labelTitle.Location = new Point(773, 198);
-            labelTitle.Name = "labelTitle";
-            labelTitle.Size = new Size(106, 47);
-            labelTitle.TabIndex = 11;
-            labelTitle.Text = "Titre :";
-            // 
-            // labelLegend
-            // 
-            labelLegend.AutoSize = true;
-            labelLegend.BackColor = Color.FromArgb(169, 24, 50);
-            labelLegend.Font = new Font("Segoe UI", 20F);
-            labelLegend.ForeColor = SystemColors.ControlLightLight;
-            labelLegend.Location = new Point(1527, 310);
-            labelLegend.Name = "labelLegend";
-            labelLegend.Size = new Size(143, 37);
-            labelLegend.TabIndex = 12;
-            labelLegend.Text = "Légendes :";
-            // 
             // buttonCompare
             // 
             buttonCompare.BackColor = Color.FromArgb(194, 226, 196);
@@ -161,6 +135,7 @@
             buttonRegion.TabIndex = 16;
             buttonRegion.Text = "Nouvelle-Aquitaine";
             buttonRegion.UseVisualStyleBackColor = true;
+            buttonRegion.Click += buttonRegion_Click;
             // 
             // comboBoxMunicipality
             // 
@@ -361,8 +336,6 @@
             Controls.Add(buttonRegion);
             Controls.Add(buttonDownload);
             Controls.Add(buttonCompare);
-            Controls.Add(labelLegend);
-            Controls.Add(labelTitle);
             Controls.Add(buttonRollBack);
             Controls.Add(labelPeriod);
             Controls.Add(buttonValidate);
@@ -381,8 +354,6 @@
         private Label labelSetting;
         private Button buttonValidate;
         private Label labelPeriod;
-        private Label labelTitle;
-        private Label labelLegend;
         private Button buttonCompare;
         private Button buttonDownload;
         private Button buttonRegion;

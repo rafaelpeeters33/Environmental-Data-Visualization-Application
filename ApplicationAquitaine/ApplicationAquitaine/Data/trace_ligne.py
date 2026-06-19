@@ -97,11 +97,11 @@ def trace_ligne(date_debut, date_fin,categorie_risque, echelle, agregation, nom_
         df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
         titre = f'Evolution de la moyenne des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
 
-        requete_unite = f""" SELECT distinct T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
+        requete_unite = f"""select distinct T_DONNEES_DNN.DNN_UNITE
         from T_DONNEES_DNN
-        join possède on possède.DNN_ID = T_DONNEES_DNN.DNN_ID
-        join T_CATEGORIE_CTG on possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
-        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
+        join POSSÈDE on POSSÈDE.DNN_ID = T_DONNEES_DNN.DNN_ID
+        join T_CATEGORIE_CTG on POSSÈDE.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+        where T_CATEGORIE_CTG.CTG_NOM Like '%{categorie_risque}%'"""
 
         df_unite = pd.read_sql(requete_unite, cnxn)
 
@@ -129,7 +129,7 @@ def trace_ligne(date_debut, date_fin,categorie_risque, echelle, agregation, nom_
     else:
         df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].count().reset_index()
         titre = f'Evolution du nombre de {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
-        y_label = "nombre d'incendie"
+        y_label = "nombre " + categorie_risque
 
      
     if df_graphique.empty:

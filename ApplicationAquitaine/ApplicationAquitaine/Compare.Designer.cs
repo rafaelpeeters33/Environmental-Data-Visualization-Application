@@ -30,8 +30,6 @@
         {
             buttonRegion = new Button();
             buttonDownload = new Button();
-            labelLegend = new Label();
-            labelTitle = new Label();
             buttonRollBack = new Button();
             labelFilter = new Label();
             buttonValidate = new Button();
@@ -69,31 +67,6 @@
             buttonDownload.Text = "Télécharger";
             buttonDownload.UseVisualStyleBackColor = true;
             buttonDownload.Click += buttonDownload_Click;
-            // 
-            // labelLegend
-            // 
-            labelLegend.AutoSize = true;
-            labelLegend.BackColor = Color.FromArgb(169, 24, 50);
-            labelLegend.Font = new Font("Segoe UI", 20F);
-            labelLegend.ForeColor = SystemColors.ControlLightLight;
-            labelLegend.Location = new Point(1536, 266);
-            labelLegend.Name = "labelLegend";
-            labelLegend.Size = new Size(143, 37);
-            labelLegend.TabIndex = 30;
-            labelLegend.Text = "Légendes :";
-            // 
-            // labelTitle
-            // 
-            labelTitle.AutoSize = true;
-            labelTitle.BackColor = Color.FromArgb(169, 24, 50);
-            labelTitle.Font = new Font("Segoe UI", 20F);
-            labelTitle.ForeColor = SystemColors.ControlLightLight;
-            labelTitle.Location = new Point(690, 216);
-            labelTitle.Name = "labelTitle";
-            labelTitle.Size = new Size(83, 37);
-            labelTitle.TabIndex = 29;
-            labelTitle.Text = "Titre :";
-            labelTitle.Click += labelTitle_Click;
             // 
             // buttonRollBack
             // 
@@ -255,8 +228,6 @@
             Controls.Add(comboBoxTypeGraph);
             Controls.Add(buttonRegion);
             Controls.Add(buttonDownload);
-            Controls.Add(labelLegend);
-            Controls.Add(labelTitle);
             Controls.Add(buttonRollBack);
             Controls.Add(labelFilter);
             Controls.Add(buttonValidate);
@@ -273,8 +244,6 @@
         private Button buttonRegion;
         private Button buttonDownload;
         private DomainUpDown domainUpDownTypeGraph;
-        private Label labelLegend;
-        private Label labelTitle;
         private Button buttonRollBack;
         private Label labelFilter;
         private Button buttonValidate;

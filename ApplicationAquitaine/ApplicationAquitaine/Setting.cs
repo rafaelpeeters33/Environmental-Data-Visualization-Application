@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.Intrinsics.Arm;
@@ -47,8 +46,8 @@ namespace ApplicationAquitaine
             comboBoxTypeGraph.Items.Add("nuage de points");
             comboBoxTypeGraph.Items.Add("regression linéaire");
             comboBoxTypeGraph.Items.Add("violon");
-            comboBoxTypeGraph.Items.Add("Histogramme");
-
+            comboBoxTypeGraph.Items.Add("histogramme");
+            comboBoxTypeGraph.Items.Add("carte");
 
             comboBoxAgregation.Items.Clear();
             comboBoxAgregation.Items.Add("avg");
@@ -76,7 +75,7 @@ namespace ApplicationAquitaine
         private void remplire_CB_Dep()
         {
             List<string> departements = lancerScriptGetAllDepartement();
-            comboBoxDepartment.Items.Clear(); // vide la liste avant de remplir
+            comboBoxDepartment.Items.Clear();
             foreach (string dept in departements)
             {
                 comboBoxDepartment.Items.Add(dept);
@@ -126,7 +125,7 @@ namespace ApplicationAquitaine
                 MessageBox.Show("Vous devez choisir une donnée à afficher");
                 return;
             }
-            if ((theGraphique == "ligne" || theGraphique == "Air empilée" || theGraphique == "violon") && agregation == null)
+            if ((theGraphique == "ligne" || theGraphique == "Air empilée" || theGraphique == "violon" || theGraphique == "regression linéaire") && agregation == null)
             {
                 MessageBox.Show("Vous devez choisir une agrégation si vous voulez afficher ce graphique");
                 return;
@@ -185,8 +184,11 @@ namespace ApplicationAquitaine
                 case "violon":
                     startInfo.ArgumentList.Add(dataPath + "violon.py");
                     break;
-                case "Histogramme":
+                case "histogramme":
                     startInfo.ArgumentList.Add(dataPath + "histogramme.py");
+                    break;
+                case "carte":
+                    startInfo.ArgumentList.Add(dataPath + "carte.py");
                     break;
 
                 default:
@@ -199,7 +201,7 @@ namespace ApplicationAquitaine
             startInfo.ArgumentList.Add(theData);
             startInfo.ArgumentList.Add(echelle);
 
-            if (theGraphique == "ligne" || theGraphique == "Air empilée" || theGraphique == "violon")
+            if (theGraphique == "ligne" || theGraphique == "Air empilée" || theGraphique == "violon" || theGraphique == "regression linéaire")
             {
                 startInfo.ArgumentList.Add(agregation);
             }
@@ -208,12 +210,10 @@ namespace ApplicationAquitaine
             startInfo.ArgumentList.Add("false");
 
             Process python = new Process { StartInfo = startInfo };
-            
             python.Start();
             string erreurs = python.StandardError.ReadToEnd();
-            //string info = python.StandardOutput.ReadToEnd();
-
             python.WaitForExit();
+
 
 
             if (python.ExitCode != 0)
@@ -248,7 +248,36 @@ namespace ApplicationAquitaine
 
         private void buttonDownload_Click(object sender, EventArgs e)
         {
+            if (pictureBox.Image == null)
+            {
+                MessageBox.Show("Il n'y a aucun graphique affiché à télécharger.",
+                                "Attention", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Title = "Télécharger le graphique";
+                saveFileDialog.Filter = "Image PNG (*.png)|*.png|Image JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|Tous les fichiers (*.*)|*.*";
+                saveFileDialog.DefaultExt = "png";
+                saveFileDialog.FileName = "graphique_aquitaine.png";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        pictureBox.Image.Save(saveFileDialog.FileName);
+
+                        MessageBox.Show("L'image a bien été téléchargée !",
+                                        "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Une erreur est survenue lors de la sauvegarde : {ex.Message}",
+                                        "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
         }
 
 
@@ -390,7 +419,7 @@ namespace ApplicationAquitaine
         {
 
             theGraphique = comboBoxTypeGraph.Text;
-            if (theGraphique == "ligne" || theGraphique == "Air empilée" || theGraphique == "violon")
+            if (theGraphique == "ligne" || theGraphique == "Air empilée" || theGraphique == "violon" ||theGraphique == "regression linéaire")
             {
                 comboBoxAgregation.Enabled = true;
             }
@@ -418,6 +447,11 @@ namespace ApplicationAquitaine
         private void pictureBox_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void buttonRegion_Click(object sender, EventArgs e)
+        {
+            
         }
     }
 }

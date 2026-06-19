@@ -223,11 +223,44 @@ namespace ApplicationAquitaine
 
         private void buttonRegion_Click(object sender, EventArgs e)
         {
+            theCom.Clear();
+            theDep.Clear();
+
 
         }
 
         private void buttonDownload_Click(object sender, EventArgs e)
         {
+            if (pictureBox.Image == null)
+            {
+                MessageBox.Show("Il n'y a aucun graphique affiché à télécharger.",
+                                "Attention", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Title = "Télécharger le graphique";
+                saveFileDialog.Filter = "Image PNG (*.png)|*.png|Image JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|Tous les fichiers (*.*)|*.*";
+                saveFileDialog.DefaultExt = "png";
+                saveFileDialog.FileName = "graphique_aquitaine.png"; 
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        pictureBox.Image.Save(saveFileDialog.FileName);
+
+                        MessageBox.Show("L'image a bien été téléchargée !",
+                                        "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Une erreur est survenue lors de la sauvegarde : {ex.Message}",
+                                        "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
 
         }
 

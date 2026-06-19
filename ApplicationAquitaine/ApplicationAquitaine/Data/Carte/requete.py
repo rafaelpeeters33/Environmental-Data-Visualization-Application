@@ -4,10 +4,10 @@ import sqlalchemy as sa
 import pymssql
 
 def connexion():
-    psw       = "teap227q"
+    psw       = "ETD"
     server    = "info-mssql-etd"
-    user      = "etd15"
-    database = "BD_E15_VISU"
+    user      = "ETD"
+    database = "MLR12345"
     engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
     cnxn = engine.connect()
     return cnxn
@@ -53,8 +53,7 @@ def requete_sql(conn,date_debut, categorie_risque, echelle, nom_zone=None, date_
         
             WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'
             AND T_DATEJOURE_DTJ.DTJ_DATE_DEBUT >= '{date_debut}'
-            AND (T_DATEJOURE_DTJ.DTJ_DATE_FIN IS NULL OR T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}')
-
+            AND T_DATEJOURE_DTJ.DTJ_DATE_FIN <= '{date_fin}'
             {filtre_geo}
         """
     else :

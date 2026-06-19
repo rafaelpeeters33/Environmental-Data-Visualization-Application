@@ -102,8 +102,18 @@ def boite_a_moustaches(start_date,end_date, risk_category, scale, zone_name=None
 
     ax = df_graphique.plot(kind='box', column='DNN_VALEUR', by='NOM_ZONE', title=titre, legend=False, color=couleur_barre, rot=0, whis=(0, 100))
    
+    request_unite = f"""select distinct T_DONNEES_DNN.DNN_UNITE
+        from T_DONNEES_DNN
+        join POSSÈDE on POSSÈDE.DNN_ID = T_DONNEES_DNN.DNN_ID
+        join T_CATEGORIE_CTG on POSSÈDE.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+        where T_CATEGORIE_CTG.CTG_NOM Like '%{risk_category}%'"""
 
-    
+    unite = pd.read_sql(request_unite, cnxn)
+
+
+    plt.ylabel(f'{risk_category} en {unite}')
+
+
 
     plt.savefig(chemin_fichier)
     plt.close()
