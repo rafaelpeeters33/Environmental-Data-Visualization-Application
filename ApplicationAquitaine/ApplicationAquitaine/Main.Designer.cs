@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             buttonContinue = new Button();
+            buttonQuit = new Button();
             SuspendLayout();
             // 
             // buttonContinue
@@ -42,12 +43,25 @@
             buttonContinue.UseVisualStyleBackColor = true;
             buttonContinue.Click += buttonContinue_Click;
             // 
+            // buttonQuit
+            // 
+            buttonQuit.BackColor = Color.FromArgb(194, 226, 196);
+            buttonQuit.Font = new Font("Segoe UI", 30F);
+            buttonQuit.Location = new Point(130, 748);
+            buttonQuit.Name = "buttonQuit";
+            buttonQuit.Size = new Size(576, 90);
+            buttonQuit.TabIndex = 1;
+            buttonQuit.Text = "Quitter";
+            buttonQuit.UseVisualStyleBackColor = false;
+            buttonQuit.Click += buttonQuit_Click;
+            // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImage = Properties.Resources.Accueil;
             ClientSize = new Size(1924, 1061);
+            Controls.Add(buttonQuit);
             Controls.Add(buttonContinue);
             Name = "Main";
             Text = "Form1";
@@ -58,5 +72,6 @@
         #endregion
 
         private Button buttonContinue;
+        private Button buttonQuit;
     }
 }
