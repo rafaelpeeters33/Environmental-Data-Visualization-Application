@@ -17,10 +17,12 @@ database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
 
+
 mois_en_lettres = {
     1: 'Janv', 2: 'Févr', 3: 'Mars', 4: 'Avril', 5: 'Mai', 6: 'Juin',
     7: 'Juil', 8: 'Août', 9: 'Sept', 10: 'Oct', 11: 'Nov', 12: 'Déc'
 }
+
 
 def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
    
@@ -41,7 +43,7 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     # COULEUR
     if categorie_risque == 'incendie':
         couleur_barre = '#FF0000'
-    elif categorie_risque == 'inondation':
+    elif categorie_risque == 'PRECIPITATION':
         couleur_barre = '#1E88E5'
     else:
         couleur_barre = '#F57C00'
@@ -70,98 +72,83 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     return df_graphique, titre_zone, couleur_barre
 
-def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
-   
-    df_graphique, titre_zone, couleur_barre, = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
+def violon(date_debut, date_fin, categorie_risque, echelle,  nom_zone=None):
+    df_graphique, titre_zone, couleur_barre = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
     print(f"Lignes renvoyées par la requête : {len(df_graphique)}", file=sys.stderr)
 
-
-    df_graphique['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphique['DTJ_DATE_DEBUT'])
-    df_graphique['DTJ_DATE_FIN'] = pd.to_datetime(df_graphique['DTJ_DATE_FIN'])
-
-    df_graphique['PERIODE'] = (
-        df_graphique['DTJ_DATE_DEBUT'].dt.month
-        + (df_graphique['DTJ_DATE_DEBUT'].dt.day - 1) / df_graphique['DTJ_DATE_DEBUT'].dt.days_in_month
-    )
-   
     if df_graphique.empty:
-        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
-        
         fig, ax = plt.subplots(figsize=(6, 4))
-        
-        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
-                horizontalalignment='center', 
-                verticalalignment='center', 
-                fontsize=12, 
-                color='gray',
-                style='italic')
-        
+        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période",
+                horizontalalignment='center', verticalalignment='center',
+                fontsize=12, color='gray', style='italic')
         ax.axis('off')
-        
         plt.show()
-        
-        return df_graphique
-    
-
-   
-    titre = f'Evolution des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
-     
-    if df_graphique.empty:
-        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
-        
-        fig, ax = plt.subplots(figsize=(6, 4))
-        
-        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
-                horizontalalignment='center', 
-                verticalalignment='center', 
-                fontsize=12, 
-                color='gray',
-                style='italic')
-        
-        ax.axis('off')
-       
-        plt.close()
-        
         return df_graphique
 
-    # PLOT ET SAVE
-    ax = df_graphique.plot(kind='scatter', x='PERIODE', y='DNN_VALEUR', title=titre, legend=False, color=couleur_barre, rot=0)
+    nom_colonne = f'{categorie_risque}'
+    df_graphique = df_graphique.rename(columns={'DNN_VALEUR': nom_colonne})
+    df_graphique['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphique['DTJ_DATE_DEBUT'])
+    df_graphique['mois'] = df_graphique['DTJ_DATE_DEBUT'].dt.month
 
-    requete_unite = f""" SELECT distinct T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
-        from T_DONNEES_DNN
-        join possède on possède.DNN_ID = T_DONNEES_DNN.DNN_ID
-        join T_CATEGORIE_CTG on possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
-        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
+    seuil_minimum = 5  # en dessous, une densité estimée n'a pas vraiment de sens
+    mois_valides, donnees_par_mois = [], []
+    for m in sorted(df_graphique['mois'].unique()):
+        valeurs = df_graphique.loc[df_graphique['mois'] == m, nom_colonne].dropna().values
+        if len(valeurs) >= seuil_minimum:
+            mois_valides.append(m)
+            donnees_par_mois.append(valeurs)
 
-    df_unite = pd.read_sql(requete_unite, cnxn)
+    fig, ax = plt.subplots(figsize=(8, 6))
 
-    nom_donnee = df_unite['DNN_NOM'].iloc[0].strip()
-    unite_donnee = df_unite['DNN_UNITE'].iloc[0].strip()
+    if donnees_par_mois:
+        vp = ax.violinplot(donnees_par_mois, positions=range(1, len(mois_valides) + 1),
+                            showmeans=True, showmedians=True, showextrema=True)
+        for corps in vp['bodies']:
+            corps.set_facecolor(couleur_barre)
+            corps.set_alpha(0.6)
+        ax.set_xticks(range(1, len(mois_valides) + 1))
+        ax.set_xticklabels([mois_en_lettres[m] for m in mois_valides])
+        plt.title(f'Densité des {categorie_risque} par mois - {titre_zone} ({date_debut} - {date_fin})')
 
-    ax.set_ylabel(nom_donnee + " en " + unite_donnee)
-
-    mois_presents = sorted(df_graphique['DTJ_DATE_DEBUT'].dt.month.unique())
-    ax.set_xticks(mois_presents)
-
-    labels_mois = [mois_en_lettres[m] for m in mois_presents]
-    ax.set_xticklabels(labels_mois, rotation=0)
     plt.show()
-
     return df_graphique
 
-def nuage_de_points_comparaison(valeurs):
+
+def violon_comparaison(valeurs):
     df_graphique = []
+    noms_colonnes = []
+    
     for i in valeurs:
-        df_graphique.append(nuage_de_points(i[0],i[1],i[2],i[3],i[4],i[5]))
+        df = violon(i[0], i[1], i[2], i[3], i[4], i[5], afficher=False)
+        df_graphique.append(df)
+    
     df_final = df_graphique[0]
     for df_suivant in df_graphique[1:]:
         df_final = pd.merge(df_final, df_suivant, on='NOM_ZONE', how='outer')
+        
+    colonnes_numeriques = [col for col in df_final.columns if col != 'NOM_ZONE']
     
-    #PLOT ET SAVE
-    ax = df_final.plot(kind='scatter', x='PERIODE',legend=False, rot=0)
+    donnees_a_tracer = []
+    labels_valides = []
+    for col in colonnes_numeriques:
+        valeurs_propres = df_final[col].dropna().values
+        if len(valeurs_propres) > 0:
+            donnees_a_tracer.append(valeurs_propres)
+            labels_valides.append(col)
+            
+    #couleurs = generer_liste_couleurs(labels_valides)
 
-    nom_fichier = 'graphique.png'
-    plt.savefig(nom_fichier, bbox_inches='tight')
+    if donnees_a_tracer:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        vp = ax.violinplot(donnees_a_tracer, showmeans=True)
+        
+        for i, corps in enumerate(vp['bodies']):
+            #corps.set_facecolor(couleurs[i])
+            corps.set_alpha(0.7)
+            
+        ax.set_xticks(range(1, len(labels_valides) + 1))
+        ax.set_xticklabels(labels_valides, rotation=15)
+        plt.title("Comparaison des Densités (Violon)")
+        plt.savefig('graphique_comparaison_violon.png', bbox_inches='tight')
+        plt.show()
     plt.close()
-
-nuage_de_points('19900101','20200101', 'TEMP_MOY','region')

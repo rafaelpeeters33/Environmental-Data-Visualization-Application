@@ -20,13 +20,13 @@ def histogramme(date_debut, date_fin,categorie_risque,echelle, nom_zone=None):
 
     df_graphique = df_graphique.dropna()
 
-    titre = f'Distribution de {categorie_risque} - {titre_zone} entre {date_debut} et {date_fin}'
+    titre = f'Distribution de {categorie_risque} - {titre_zone} - ({date_debut} - {date_fin})'
 
     fig, ax = plt.subplots()
 
     df_graphique['DNN_VALEUR'].plot(kind='hist',bins=10,color=couleur_barre,edgecolor='black',title=titre,legend=False,ax=ax)
 
-    ax.set_xlabel(categorie_risque)
+    ax.set_xlabel(f'{categorie_risque} en mm')
     ax.set_ylabel("Nombre de jours")
 
     plt.savefig("graphique.png", bbox_inches="tight")

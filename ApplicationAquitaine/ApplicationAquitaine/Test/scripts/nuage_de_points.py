@@ -17,6 +17,7 @@ database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
 
+
 mois_en_lettres = {
     1: 'Janv', 2: 'Févr', 3: 'Mars', 4: 'Avril', 5: 'Mai', 6: 'Juin',
     7: 'Juil', 8: 'Août', 9: 'Sept', 10: 'Oct', 11: 'Nov', 12: 'Déc'
@@ -41,7 +42,7 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     # COULEUR
     if categorie_risque == 'incendie':
         couleur_barre = '#FF0000'
-    elif categorie_risque == 'inondation':
+    elif categorie_risque == 'PRECIPITATION':
         couleur_barre = '#1E88E5'
     else:
         couleur_barre = '#F57C00'
@@ -70,6 +71,8 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     return df_graphique, titre_zone, couleur_barre
 
+################################################# GRAPHIQUES NUAGES DE POINTS ###########################################################
+
 def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
    
     df_graphique, titre_zone, couleur_barre, = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
@@ -83,27 +86,7 @@ def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=No
         df_graphique['DTJ_DATE_DEBUT'].dt.month
         + (df_graphique['DTJ_DATE_DEBUT'].dt.day - 1) / df_graphique['DTJ_DATE_DEBUT'].dt.days_in_month
     )
-   
-    if df_graphique.empty:
-        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
-        
-        fig, ax = plt.subplots(figsize=(6, 4))
-        
-        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
-                horizontalalignment='center', 
-                verticalalignment='center', 
-                fontsize=12, 
-                color='gray',
-                style='italic')
-        
-        ax.axis('off')
-        
-        plt.show()
-        
-        return df_graphique
-    
-
-   
+     
     titre = f'Evolution des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
      
     if df_graphique.empty:
@@ -119,6 +102,7 @@ def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=No
                 style='italic')
         
         ax.axis('off')
+        
        
         plt.close()
         
@@ -145,6 +129,7 @@ def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=No
 
     labels_mois = [mois_en_lettres[m] for m in mois_presents]
     ax.set_xticklabels(labels_mois, rotation=0)
+
     plt.show()
 
     return df_graphique
@@ -162,6 +147,5 @@ def nuage_de_points_comparaison(valeurs):
 
     nom_fichier = 'graphique.png'
     plt.savefig(nom_fichier, bbox_inches='tight')
-    plt.close()
+    plt.show()
 
-nuage_de_points('19900101','20200101', 'TEMP_MOY','region')
