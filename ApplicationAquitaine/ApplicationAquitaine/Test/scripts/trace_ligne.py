@@ -17,6 +17,7 @@ database = "BD_E15_VISU"
 engine = sa.create_engine(f'mssql+pymssql://{user}:{psw}@{server}/{database}')
 cnxn = engine.connect()
 
+
 mois_en_lettres = {
     1: 'Janv', 2: 'Févr', 3: 'Mars', 4: 'Avril', 5: 'Mai', 6: 'Juin',
     7: 'Juil', 8: 'Août', 9: 'Sept', 10: 'Oct', 11: 'Nov', 12: 'Déc'
@@ -41,7 +42,7 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     # COULEUR
     if categorie_risque == 'incendie':
         couleur_barre = '#FF0000'
-    elif categorie_risque == 'inondation':
+    elif categorie_risque == 'PRECIPITATION':
         couleur_barre = '#1E88E5'
     else:
         couleur_barre = '#F57C00'
@@ -66,45 +67,61 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
         {filtre_geo}
     """
     
-    df_graphique = pd.read_sql(requete_sql, cnxn, coerce_float=False)
+    df_graphique = pd.read_sql(requete_sql, cnxn, coerce_float=True)
     df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     return df_graphique, titre_zone, couleur_barre
 
-def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
+
+def trace_ligne(date_debut, date_fin,categorie_risque, echelle, agregation, nom_zone=None):
    
     df_graphique, titre_zone, couleur_barre, = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
     print(f"Lignes renvoyées par la requête : {len(df_graphique)}", file=sys.stderr)
 
-
     df_graphique['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphique['DTJ_DATE_DEBUT'])
     df_graphique['DTJ_DATE_FIN'] = pd.to_datetime(df_graphique['DTJ_DATE_FIN'])
 
-    df_graphique['PERIODE'] = (
-        df_graphique['DTJ_DATE_DEBUT'].dt.month
-        + (df_graphique['DTJ_DATE_DEBUT'].dt.day - 1) / df_graphique['DTJ_DATE_DEBUT'].dt.days_in_month
-    )
-   
-    if df_graphique.empty:
-        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
-        
-        fig, ax = plt.subplots(figsize=(6, 4))
-        
-        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
-                horizontalalignment='center', 
-                verticalalignment='center', 
-                fontsize=12, 
-                color='gray',
-                style='italic')
-        
-        ax.axis('off')
-        
-        plt.show()
-        
-        return df_graphique
     
+    df_graphique['PERIODE']=df_graphique['DTJ_DATE_DEBUT'].dt.month
+       
+    # AGEGATIONS
+    if agregation == 'avg':
+        df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].mean().reset_index()
+        titre = f'Evolution de la moyenne des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
 
-   
-    titre = f'Evolution des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
+        requete_unite = f""" SELECT distinct T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
+        from T_DONNEES_DNN
+        join possède on possède.DNN_ID = T_DONNEES_DNN.DNN_ID
+        join T_CATEGORIE_CTG on possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
+
+        df_unite = pd.read_sql(requete_unite, cnxn)
+
+        nom_donnee = df_unite['DNN_NOM'].iloc[0].strip()
+        unite_donnee = df_unite['DNN_UNITE'].iloc[0].strip()
+        y_label = nom_donnee + " en " + unite_donnee
+
+
+    elif agregation == 'sum':
+        df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].sum().reset_index()
+        titre = f'Evolution de la somme des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
+
+        requete_unite = f""" SELECT distinct T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
+        from T_DONNEES_DNN
+        join possède on possède.DNN_ID = T_DONNEES_DNN.DNN_ID
+        join T_CATEGORIE_CTG on possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
+
+        df_unite = pd.read_sql(requete_unite, cnxn)
+
+        nom_donnee = df_unite['DNN_NOM'].iloc[0].strip()
+        unite_donnee = df_unite['DNN_UNITE'].iloc[0].strip()
+        y_label = nom_donnee + " en " + unite_donnee
+
+    else:
+        df_final = df_graphique.groupby('PERIODE')['DNN_VALEUR'].count().reset_index()
+        titre = f'Evolution du nombre de {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
+        y_label = "nombre d'incendie"
+
      
     if df_graphique.empty:
         print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
@@ -119,49 +136,52 @@ def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=No
                 style='italic')
         
         ax.axis('off')
-       
+        
         plt.close()
         
         return df_graphique
-
+    
+    
     # PLOT ET SAVE
-    ax = df_graphique.plot(kind='scatter', x='PERIODE', y='DNN_VALEUR', title=titre, legend=False, color=couleur_barre, rot=0)
+    ax = df_final.plot( kind='line', x='PERIODE', y='DNN_VALEUR', title=titre, legend=False, color=couleur_barre, rot=0)
+   
+    ax.set_ylabel(y_label)
 
-    requete_unite = f""" SELECT distinct T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
-        from T_DONNEES_DNN
-        join possède on possède.DNN_ID = T_DONNEES_DNN.DNN_ID
-        join T_CATEGORIE_CTG on possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
-        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
-
-    df_unite = pd.read_sql(requete_unite, cnxn)
-
-    nom_donnee = df_unite['DNN_NOM'].iloc[0].strip()
-    unite_donnee = df_unite['DNN_UNITE'].iloc[0].strip()
-
-    ax.set_ylabel(nom_donnee + " en " + unite_donnee)
-
-    mois_presents = sorted(df_graphique['DTJ_DATE_DEBUT'].dt.month.unique())
+    mois_presents = sorted(df_final['PERIODE'].unique())
     ax.set_xticks(mois_presents)
 
     labels_mois = [mois_en_lettres[m] for m in mois_presents]
     ax.set_xticklabels(labels_mois, rotation=0)
+
     plt.show()
 
-    return df_graphique
-
-def nuage_de_points_comparaison(valeurs):
+def trace_ligne_comparaison(valeurs):
     df_graphique = []
     for i in valeurs:
-        df_graphique.append(nuage_de_points(i[0],i[1],i[2],i[3],i[4],i[5]))
+        df_graphique.append(trace_ligne(i[0],i[1],i[2],i[3],i[4],i[5]))
     df_final = df_graphique[0]
     for df_suivant in df_graphique[1:]:
         df_final = pd.merge(df_final, df_suivant, on='NOM_ZONE', how='outer')
-    
-    #PLOT ET SAVE
-    ax = df_final.plot(kind='scatter', x='PERIODE',legend=False, rot=0)
+ 
+    liste_couleurs = []
+    for col in df_final.columns:
+        if col == 'NOM_ZONE':
+            continue 
 
-    nom_fichier = 'graphique.png'
-    plt.savefig(nom_fichier, bbox_inches='tight')
+        if 'incendie' in col:
+            liste_couleurs.append('#FF0000') 
+        elif 'inondation' in col:
+            liste_couleurs.append('#1E88E5') 
+        else:
+            liste_couleurs.append('#F57C00')
+
+    titre = f'Comparaison de données'
+
+    #PLOT ET SAVE
+    ax = df_final.plot(kind='line', x='PERIODE',title=titre, legend=False, rot=0)
+
+    chemin_fichier = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'setting.png')
+
+    plt.savefig(chemin_fichier)
     plt.close()
 
-nuage_de_points('19900101','20200101', 'TEMP_MOY','region')

@@ -3,12 +3,12 @@ import pandas as pd
 import sqlalchemy as sa
 import os
 import geopandas as gpd
-import pymssql
-from IPython.display import display
 import numpy.typing as npt
 import numpy as np
 from math import sqrt
-import sys
+
+import sys 
+
 
 psw       = "teap227q"
 server    = "info-mssql-etd"
@@ -41,7 +41,7 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     # COULEUR
     if categorie_risque == 'incendie':
         couleur_barre = '#FF0000'
-    elif categorie_risque == 'inondation':
+    elif categorie_risque == 'PRECIPITATION':
         couleur_barre = '#1E88E5'
     else:
         couleur_barre = '#F57C00'
@@ -70,42 +70,56 @@ def requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
     df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce')
     return df_graphique, titre_zone, couleur_barre
 
-def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
-   
-    df_graphique, titre_zone, couleur_barre, = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
-    print(f"Lignes renvoyées par la requête : {len(df_graphique)}", file=sys.stderr)
 
+def construire_serie(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
+    
+    df_graphique, titre_zone, _ = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
+
+    if df_graphique.empty:
+        return None, None, titre_zone
 
     df_graphique['DTJ_DATE_DEBUT'] = pd.to_datetime(df_graphique['DTJ_DATE_DEBUT'])
-    df_graphique['DTJ_DATE_FIN'] = pd.to_datetime(df_graphique['DTJ_DATE_FIN'])
-
-    df_graphique['PERIODE'] = (
-        df_graphique['DTJ_DATE_DEBUT'].dt.month
-        + (df_graphique['DTJ_DATE_DEBUT'].dt.day - 1) / df_graphique['DTJ_DATE_DEBUT'].dt.days_in_month
-    )
-   
-    if df_graphique.empty:
-        print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
-        
-        fig, ax = plt.subplots(figsize=(6, 4))
-        
-        ax.text(0.5, 0.5, "Aucune donnée disponible\npour cette période", 
-                horizontalalignment='center', 
-                verticalalignment='center', 
-                fontsize=12, 
-                color='gray',
-                style='italic')
-        
-        ax.axis('off')
-        
-        plt.show()
-        
-        return df_graphique
     
+    date_deb_dt = pd.to_datetime(date_debut)
+    date_fin_dt = pd.to_datetime(date_fin)
+    nb_jours = (date_fin_dt - date_deb_dt).days
+    month = False
 
+    if nb_jours < 31:
+        df_graphique['PERIODE'] = df_graphique['DTJ_DATE_DEBUT'].dt.strftime('%Y-%m-%d')
+    elif nb_jours > 365:
+        df_graphique['PERIODE'] = df_graphique['DTJ_DATE_DEBUT'].dt.year
+    else:
+        df_graphique['PERIODE'] = df_graphique['DTJ_DATE_DEBUT'].dt.strftime('%Y-%m')
+        
+
+    
+    requete_unite = f"""SELECT DISTINCT T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
+        FROM T_DONNEES_DNN
+        JOIN possède ON possède.DNN_ID = T_DONNEES_DNN.DNN_ID
+        JOIN T_CATEGORIE_CTG ON possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
+        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
+    df_unite = pd.read_sql(requete_unite, cnxn)
+    unite = df_unite['DNN_UNITE'].iloc[0].strip() if not df_unite.empty else ""
+
+    nom_serie = f"{titre_zone} - {categorie_risque}"
+    df_resultat = df_resultat.rename(columns={'DNN_VALEUR': nom_serie})
+
+    return df_resultat, unite, titre_zone
+
+def histogramme(date_debut, date_fin,categorie_risque,echelle, nom_zone=None):
    
-    titre = f'Evolution des {categorie_risque} - {titre_zone} ({date_debut} - {date_fin})'
-     
+    df_graphique, titre_zone, couleur_barre = requete_sql(date_debut,date_fin,categorie_risque,echelle,nom_zone)
+
+    df_graphique['DNN_VALEUR'] = pd.to_numeric(
+        df_graphique['DNN_VALEUR'],
+        errors='coerce'
+    )
+
+    #df_graphique = df_graphique.dropna()
+
+    titre = f'Distribution de {categorie_risque} - {titre_zone} entre {date_debut} et {date_fin}'
+
     if df_graphique.empty:
         print("Aucune donnée trouvée pour ces critères. Génération d'une image vide.")
         
@@ -119,49 +133,23 @@ def nuage_de_points(date_debut, date_fin, categorie_risque, echelle, nom_zone=No
                 style='italic')
         
         ax.axis('off')
-       
+        
+        
         plt.close()
         
         return df_graphique
 
-    # PLOT ET SAVE
-    ax = df_graphique.plot(kind='scatter', x='PERIODE', y='DNN_VALEUR', title=titre, legend=False, color=couleur_barre, rot=0)
 
-    requete_unite = f""" SELECT distinct T_DONNEES_DNN.DNN_NOM, T_DONNEES_DNN.DNN_UNITE
-        from T_DONNEES_DNN
-        join possède on possède.DNN_ID = T_DONNEES_DNN.DNN_ID
-        join T_CATEGORIE_CTG on possède.CTG_ID = T_CATEGORIE_CTG.CTG_ID
-        WHERE T_CATEGORIE_CTG.CTG_NOM LIKE '%{categorie_risque}%'"""
+    fig, ax = plt.subplots()
 
-    df_unite = pd.read_sql(requete_unite, cnxn)
+    df_graphique['DNN_VALEUR'].plot(kind='hist',bins=10,color=couleur_barre,edgecolor='black',title=titre,legend=False,ax=ax)
 
-    nom_donnee = df_unite['DNN_NOM'].iloc[0].strip()
-    unite_donnee = df_unite['DNN_UNITE'].iloc[0].strip()
-
-    ax.set_ylabel(nom_donnee + " en " + unite_donnee)
-
-    mois_presents = sorted(df_graphique['DTJ_DATE_DEBUT'].dt.month.unique())
-    ax.set_xticks(mois_presents)
-
-    labels_mois = [mois_en_lettres[m] for m in mois_presents]
-    ax.set_xticklabels(labels_mois, rotation=0)
+    ax.set_xlabel(categorie_risque)
+    ax.set_ylabel("Nombre de jours")
+    
     plt.show()
+
 
     return df_graphique
 
-def nuage_de_points_comparaison(valeurs):
-    df_graphique = []
-    for i in valeurs:
-        df_graphique.append(nuage_de_points(i[0],i[1],i[2],i[3],i[4],i[5]))
-    df_final = df_graphique[0]
-    for df_suivant in df_graphique[1:]:
-        df_final = pd.merge(df_final, df_suivant, on='NOM_ZONE', how='outer')
-    
-    #PLOT ET SAVE
-    ax = df_final.plot(kind='scatter', x='PERIODE',legend=False, rot=0)
 
-    nom_fichier = 'graphique.png'
-    plt.savefig(nom_fichier, bbox_inches='tight')
-    plt.close()
-
-nuage_de_points('19900101','20200101', 'TEMP_MOY','region')

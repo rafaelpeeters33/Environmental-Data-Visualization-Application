@@ -81,7 +81,7 @@ def regression_lineaire(date_debut, date_fin, categorie_risque, echelle, nom_zon
     plt.plot(x_line, y_line, color=couleur_barre)
     plt.scatter(x, y)
     plt.xlabel('Années')
-    plt.ylabel(f'{categorie_risque} en °C')
+    plt.ylabel(categorie_risque)
     plt.title(f'Régression linéaire – {categorie_risque} – {titre_zone} ({date_debut}–{date_fin})')
 
     plt.savefig('graphique.png', bbox_inches ='tight')

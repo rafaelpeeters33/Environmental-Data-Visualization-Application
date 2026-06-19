@@ -69,29 +69,4 @@ def diagramme_barres_comparaison(valeurs):
     nom_fichier = 'graphique.png'
     plt.savefig(nom_fichier, bbox_inches='tight')
     plt.close()
-diagramme_barres(19900101,20250201,'INCENDIE','region','sum')
 
-def histogramme_risques(date_debut, date_fin, categorie_risque, echelle, nom_zone=None):
-    # 1. Utilisation de ta fonction de récupération existante
-    df_graphique, titre_zone, couleur_barre = requete_sql(date_debut, date_fin, categorie_risque, echelle, nom_zone)
-    df_graphique['DNN_VALEUR'] = pd.to_numeric(df_graphique['DNN_VALEUR'], errors='coerce').dropna()
-    
-    titre = f'Répartition des valeurs : {categorie_risque} - {titre_zone}'
-
-    # 2. Affichage style "Distribution" (Histogramme)
-    # bins=20 permet de bien voir la forme de la cloche ou de la traînée
-    ax = df_graphique['DNN_VALEUR'].plot(kind='hist', bins=20, title=titre, color=couleur_barre, 
-                                          edgecolor='white', alpha=0.8, figsize=(8, 6))
-    
-    ax.set_xlabel(f"Valeur mesurée ({categorie_risque})")
-    ax.set_ylabel("Nombre d'occurrences")
-
-    # 3. Sauvegarde comme les autres
-    nom_fichier = 'graphique.png'
-    plt.savefig(nom_fichier, bbox_inches='tight')
-    plt.show()
-    
-    return df_graphique
-
-histogramme_risques(20000101, 20251231, 'T_TEMP_MOY', 'region')
-histogramme_risques(20000101, 20251231, 'PRECIPITATIONS', 'region')
